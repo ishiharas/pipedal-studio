@@ -38,14 +38,18 @@ const styles = ({ palette }: Theme) => createStyles({
         position: "absolute",
         width: "100%",
         height: "100%",
-        background: palette.action.hover,
+        borderRadius: 10,
+        background: palette.mode === "dark" ? "rgba(255, 255, 255, 0.06)" : palette.action.hover,
         //opacity: palette.action.hoverOpacity
     }),
     selected: css({
         position: "absolute",
         width: "100%",
         height: "100%",
-        background: palette.action.selected,
+        borderRadius: 10,
+        background: palette.mode === "dark" ? "rgba(0, 229, 255, 0.14)" : palette.action.selected,
+        border: palette.mode === "dark" ? "1px solid rgba(0, 229, 255, 0.38)" : "none",
+        boxShadow: palette.mode === "dark" ? "inset 0 0 12px rgba(0, 229, 255, 0.10)" : "none"
         //opacity: palette.action.selectedOpacity
     })
 

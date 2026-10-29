@@ -62,7 +62,7 @@ const styles = (theme: Theme) => {
             opacity: theme.palette.mode === 'light' ? 0.38 : 0.3
         }),
         controlFrame: css({
-            display: "flex", flexDirection: "column", alignItems: "start", justifyContent: "space-between", height: 116
+            display: "flex", flexDirection: "column", alignItems: "start", justifyContent: "space-between", height: 128
         }),
         displayValue: css({
             position: "absolute",
@@ -221,7 +221,7 @@ const FilePropertyControl =
                 }
             }
 
-            let item_width = 264;
+            let item_width = 276;
 
             return (
                 <div className={classes.controlFrame}
@@ -231,26 +231,49 @@ const FilePropertyControl =
                     >
                         <Typography variant="caption" display="block" noWrap style={{
                             width: "100%",
-                            textAlign: "start"
+                            textAlign: "start",
+                            fontWeight: 700,
+                            fontSize: "11px",
+                            letterSpacing: "0.04em",
+                            textTransform: "uppercase",
+                            color: isDarkMode() ? "#94A3B8" : "#475569"
                         }}> {fileProperty.label}</Typography>
                     </div>
                     {/* CONTROL SECTION */}
 
-                    <div className={classes.midSection} style={{ width: "100%", paddingLeft: 8 }}>
+                    <div className={classes.midSection} style={{ width: "100%", paddingLeft: 8, paddingRight: 4 }}>
                         <ToolTipEx title={toolTipText}>
-                        <ButtonBase style={{ width: "100%", borderRadius: "4px 4px 0px 0px", overflow: "hidden" }} onClick={() => { this.onFileClick() }} >
+                        <ButtonBase style={{ width: "100%", borderRadius: 10, overflow: "hidden" }} onClick={() => { this.onFileClick() }} >
                             <div style={{
-                                width: "100%", background:
-                                    isDarkMode() ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.07)",
-                                borderRadius: "4px 4px 0px 0px"
+                                width: "100%",
+                                background: isDarkMode()
+                                    ? "linear-gradient(180deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.95) 100%)"
+                                    : "linear-gradient(180deg, #FFFFFF 0%, #F1F5F9 100%)",
+                                border: isDarkMode() ? "1px solid rgba(0, 229, 255, 0.32)" : "1px solid rgba(15, 23, 42, 0.2)",
+                                borderRadius: 10,
+                                padding: "6px 10px",
+                                boxShadow: isDarkMode() ? "0 4px 12px rgba(0, 0, 0, 0.4)" : "0 2px 6px rgba(0, 0, 0, 0.06)"
                             }}>
-                                <div style={{ display: "flex", alignItems: "center", flexFlow: "row nowrap" }}>
-                                    <Typography noWrap={true} style={{ flex: "1 1 100%", textAlign: "start", verticalAlign: "center", paddingTop: 4, paddingBottom: 4, paddingLeft: 4 }}
+                                <div style={{ display: "flex", alignItems: "center", flexFlow: "row nowrap", gap: 6 }}>
+                                    <div style={{
+                                        width: 7,
+                                        height: 7,
+                                        borderRadius: "50%",
+                                        background: value === "<none>" ? "#64748B" : "#00E5FF",
+                                        boxShadow: value === "<none>" ? "none" : "0 0 6px #00E5FF",
+                                        flex: "0 0 auto"
+                                    }} />
+                                    <Typography noWrap={true} style={{
+                                        flex: "1 1 100%",
+                                        textAlign: "start",
+                                        fontWeight: 600,
+                                        fontSize: "12.5px",
+                                        color: isDarkMode() ? "#F8FAFC" : "#0F172A"
+                                    }}
                                         variant='caption'
                                     >{value}</Typography>
-                                    <MoreHorizIcon style={{ flex: "0 0 auto", width: "16px", height: "16px", verticalAlign: "center", opacity: 0.5, marginRight: 4 }} />
+                                    <MoreHorizIcon style={{ flex: "0 0 auto", width: "18px", height: "18px", color: isDarkMode() ? "#00E5FF" : "#0284C7", opacity: 0.85 }} />
                                 </div>
-                                <div style={{ height: "1px", width: "100%", background: this.props.theme.palette.text.secondary }}>&nbsp;</div>
                             </div>
                         </ButtonBase>
                         </ToolTipEx>

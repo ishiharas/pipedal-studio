@@ -24,7 +24,8 @@ import { withStyles } from "tss-react/mui";
 import IconButtonEx from './IconButtonEx';
 import ButtonEx from './ButtonEx';
 import ButtonBase from '@mui/material/ButtonBase';
-import PluginIcon, { getIconColor } from './PluginIcon';
+import PluginIcon, { getIconColor, getPluginCategoryInfo } from './PluginIcon';
+import { PluginType } from './Lv2Plugin';
 
 import ToolTipEx from './ToolTipEx';
 import { PiPedalModel, PiPedalModelFactory } from './PiPedalModel';
@@ -33,12 +34,18 @@ import {
 } from './Pedalboard';
 import InputIcon from '@mui/icons-material/Input';
 import LoadPluginDialog from './LoadPluginDialog';
-import Switch from '@mui/material/Switch';
 import Typography from '@mui/material/Typography';
 
 import PedalboardView from './PedalboardView';
 import { PiPedalStateError } from './PiPedalError';
 import AddIcon from '@mui/icons-material/Add';
+import SettingsIcon from '@mui/icons-material/Settings';
+import ZoomInIcon from '@mui/icons-material/ZoomIn';
+import ZoomOutIcon from '@mui/icons-material/ZoomOut';
+import CenterFocusStrongIcon from '@mui/icons-material/CenterFocusStrong';
+import DragHandleIcon from '@mui/icons-material/DragHandle';
+import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
+import Slider from '@mui/material/Slider';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import Fade from '@mui/material/Fade';
@@ -80,35 +87,79 @@ const styles = ({ palette }: Theme) => {
     return {
         frame: css({
             position: "absolute", display: "flex", flexDirection: "column", flexWrap: "nowrap",
-            justifyContent: "flex-start", left: "0px", top: "0px", bottom: "0px", right: "0px", overflow: "hidden"
+            justifyContent: "flex-start", left: "0px", top: "0px", bottom: "0px", right: "0px", overflow: "hidden",
+            background: isDarkMode()
+                ? "radial-gradient(ellipse at 50% 0%, #161C2B 0%, #0B0D13 70%)"
+                : "#F8FAFC"
+        }),
+        pedalboardStageWrapper: css({
+            position: "relative",
+            width: "100%",
+            overflow: "hidden",
+            display: "flex",
+            flexDirection: "column",
+            backgroundImage: isDarkMode()
+                ? "radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px)"
+                : "radial-gradient(rgba(15, 23, 42, 0.06) 1px, transparent 1px)",
+            backgroundSize: "20px 20px"
         }),
         pedalboardScroll: css({
-            position: "relative", width: "100%",
-            flex: "0 0 auto", overflow: "auto", maxHeight: 220,
+            position: "relative", width: "100%", height: "100%",
+            flex: "1 1 auto", overflow: "hidden",
+            display: "flex", alignItems: "center", justifyContent: "center"
         }),
         pedalboardScrollSmall: css({
-            position: "relative", width: "100%",
-            flex: "1 1 1px", overflow: "auto"
+            position: "relative", width: "100%", height: "100%",
+            flex: "1 1 1px", overflow: "hidden",
+            display: "flex", alignItems: "center", justifyContent: "center"
         }),
         separator: css({
-            width: "100%", height: "1px", background: "#888", opacity: "0.5",
+            width: "100%", height: "1px",
+            background: isDarkMode() ? "rgba(255, 255, 255, 0.08)" : "rgba(15, 23, 42, 0.12)",
             flex: "0 0 1px"
         }),
 
         controlToolBar: css({
-            flex: "0 0 auto", width: "100%", height: 48
+            flex: "0 0 auto", width: "100%", height: 54,
+            background: isDarkMode()
+                ? "linear-gradient(180deg, rgba(26, 33, 48, 0.95) 0%, rgba(17, 22, 33, 0.95) 100%)"
+                : "linear-gradient(180deg, #FFFFFF 0%, #F1F5F9 100%)",
+            borderBottom: isDarkMode() ? "1px solid rgba(255, 255, 255, 0.07)" : "1px solid rgba(15, 23, 42, 0.08)"
         }),
         splitControlBar: css({
-            flex: "0 0 64px", width: "100%", paddingLeft: 24, paddingRight: 16, paddingBottom: 16
+            flex: "0 0 56px", width: "100%", paddingLeft: 20, paddingRight: 16, paddingBottom: 8,
+            background: isDarkMode() ? "rgba(17, 22, 33, 0.95)" : "#F1F5F9",
+            borderBottom: isDarkMode() ? "1px solid rgba(255, 255, 255, 0.07)" : "1px solid rgba(15, 23, 42, 0.08)"
         }),
         controlContent: css({
-            flex: "1 1 auto", width: "100%", overflowY: "hidden", minHeight: 185
+            flex: "1 1 0px", width: "100%", minHeight: 90, position: "relative", overflow: "hidden",
+            background: isDarkMode()
+                ? "linear-gradient(180deg, #111520 0%, #0B0E15 100%)"
+                : "#FFFFFF"
         }),
         controlContentSmall: css({
-            flex: "0 0 162px", width: "100%", height: 162, overflowY: "hidden",
+            flex: "1 1 0px", width: "100%", minHeight: 90, position: "relative", overflow: "hidden",
+            background: isDarkMode()
+                ? "linear-gradient(180deg, #111520 0%, #0B0E15 100%)"
+                : "#FFFFFF"
         }),
-        title: css({ fontSize: "1.1rem", fontWeight: 700, marginRight: 8, textOverflow: "ellipsis", whiteSpace: "nowrap", opacity: 0.75 }),
-        author: css({ fontWeight: 500, fontSize: "0.8rem", marginRight: 8, textOverflow: "ellipsis", whiteSpace: "nowrap", opacity: 0.75 })
+        title: css({
+            fontSize: "1.08rem",
+            fontWeight: 700,
+            letterSpacing: "0.01em",
+            marginRight: 10,
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+            color: isDarkMode() ? "#F8FAFC" : "#0F172A"
+        }),
+        author: css({
+            fontWeight: 500,
+            fontSize: "0.78rem",
+            marginRight: 8,
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+            color: isDarkMode() ? "#94A3B8" : "#64748B"
+        })
     }
 };
 
@@ -135,9 +186,13 @@ interface MainState {
     screenHeight: number;
     displayNameDialogOpen: boolean;
     showModUi: boolean;
-
-
-
+    hardwareChainView: boolean;
+    chainZoom: number;
+    panX: number;
+    panY: number;
+    centerViewSeq: number;
+    stageHeight: number;
+    isResizingStage: boolean;
 }
 
 
@@ -183,9 +238,14 @@ export const MainPage =
                         horizontalScrollLayout: this.windowSize.height < HORIZONTAL_CONTROL_SCROLL_HEIGHT_BREAK,
                         showMidiBindingsDialog: false,
                         screenHeight: this.windowSize.height,
-                        showModUi: false
-
-
+                        showModUi: false,
+                        hardwareChainView: window.localStorage.getItem("pipedal_hardware_chain_view") !== "false",
+                        chainZoom: parseFloat(window.localStorage.getItem("pipedal_chain_zoom") || "1.0") || 1.0,
+                        panX: 0,
+                        panY: 0,
+                        centerViewSeq: 0,
+                        stageHeight: parseInt(window.localStorage.getItem("pipedal_stage_height") || "250", 10) || 250,
+                        isResizingStage: false
                     };
                     this.onSelectionChanged = this.onSelectionChanged.bind(this);
                     this.onPedalDoubleClick = this.onPedalDoubleClick.bind(this);
@@ -195,6 +255,97 @@ export const MainPage =
                     this.onPedalboardChanged = this.onPedalboardChanged.bind(this);
                     this.onSelectedSnapshotChanged = this.onSelectedSnapshotChanged.bind(this);
                     this.handleEnableCurrentItemChanged = this.handleEnableCurrentItemChanged.bind(this);
+                    this.handlePanChange = this.handlePanChange.bind(this);
+                    this.handleWheelZoom = this.handleWheelZoom.bind(this);
+                    this.handleCenterView = this.handleCenterView.bind(this);
+                    this.handleLayoutSizeChanged = this.handleLayoutSizeChanged.bind(this);
+                    this.onStageResizePointerDown = this.onStageResizePointerDown.bind(this);
+                    this.onStageResizePointerMove = this.onStageResizePointerMove.bind(this);
+                    this.onStageResizePointerUp = this.onStageResizePointerUp.bind(this);
+                }
+
+                private resizeStartY: number = 0;
+                private resizeStartHeight: number = 250;
+                private chainRawWidth: number = 780;
+                private chainRawHeight: number = 128;
+
+                handleLayoutSizeChanged(width: number, height: number) {
+                    this.chainRawWidth = width;
+                    this.chainRawHeight = height;
+                }
+
+                handlePanChange(panX: number, panY: number) {
+                    this.setState({ panX, panY });
+                }
+
+                handleWheelZoom(deltaZoom: number) {
+                    let nextZoom = Math.min(1.45, Math.max(0.65, Math.round((this.state.chainZoom + deltaZoom) * 100) / 100));
+                    window.localStorage.setItem("pipedal_chain_zoom", nextZoom.toString());
+                    this.setState({ chainZoom: nextZoom });
+                }
+
+                handleCenterView() {
+                    let scrollEl = document.getElementById("pedalboardScroll");
+                    let sizeBoxEl = document.getElementById("pedalboardChainSizeBox");
+                    let rawW = this.chainRawWidth;
+                    let rawH = this.chainRawHeight;
+                    if (sizeBoxEl) {
+                        let attrW = parseFloat(sizeBoxEl.getAttribute("data-raw-width") || "0");
+                        let attrH = parseFloat(sizeBoxEl.getAttribute("data-raw-height") || "0");
+                        if (attrW > 10) rawW = attrW;
+                        if (attrH > 10) rawH = attrH;
+                    }
+                    let bestZoom = this.state.chainZoom;
+                    if (scrollEl && rawW > 10 && rawH > 10) {
+                        // Symmetrical 64px horizontal clearance on both left and right so centered at panX=0 never overlaps the right-side zoom bar
+                        let availW = Math.max(240, scrollEl.clientWidth - 128);
+                        let availH = Math.max(110, scrollEl.clientHeight - 36);
+                        let fitZoom = Math.min(availW / rawW, availH / rawH);
+                        bestZoom = Math.min(1.45, Math.max(0.65, Math.floor(fitZoom * 20) / 20));
+                    }
+                    window.localStorage.setItem("pipedal_chain_zoom", bestZoom.toString());
+                    this.setState({
+                        panX: 0,
+                        panY: 0,
+                        chainZoom: bestZoom,
+                        centerViewSeq: this.state.centerViewSeq + 1
+                    });
+                    if (scrollEl) {
+                        scrollEl.scrollLeft = 0;
+                        scrollEl.scrollTop = 0;
+                    }
+                }
+
+                onStageResizePointerDown(e: React.PointerEvent<HTMLDivElement>) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    this.resizeStartY = e.clientY;
+                    this.resizeStartHeight = this.state.stageHeight;
+                    this.setState({ isResizingStage: true });
+                    try {
+                        e.currentTarget.setPointerCapture(e.pointerId);
+                    } catch (_err) {
+                        // ignore
+                    }
+                }
+
+                onStageResizePointerMove(e: React.PointerEvent<HTMLDivElement>) {
+                    if (!this.state.isResizingStage) return;
+                    let dy = e.clientY - this.resizeStartY;
+                    let maxStageH = Math.max(180, this.state.screenHeight - 160);
+                    let nextHeight = Math.min(maxStageH, Math.max(135, Math.round(this.resizeStartHeight + dy)));
+                    this.setState({ stageHeight: nextHeight });
+                }
+
+                onStageResizePointerUp(e: React.PointerEvent<HTMLDivElement>) {
+                    if (!this.state.isResizingStage) return;
+                    this.setState({ isResizingStage: false });
+                    window.localStorage.setItem("pipedal_stage_height", this.state.stageHeight.toString());
+                    try {
+                        e.currentTarget.releasePointerCapture(e.pointerId);
+                    } catch (_err) {
+                        // ignore
+                    }
                 }
 
                 handleEditPluginDisplayName() {
@@ -478,17 +629,37 @@ export const MainPage =
                         );
 
                     } else {
+                        let pType = uiPlugin ? uiPlugin.plugin_type : PluginType.Plugin;
+                        if (infoPluginUri === "http://two-play.com/plugins/toob-nam") {
+                            pType = PluginType.NamPlugin;
+                        }
+                        let catInfo = getPluginCategoryInfo(pType, pedalboardItem?.iconColor ?? "", infoPluginUri);
                         return (
                             <div style={{
                                 flex: "1 1 auto", minWidth: 0, overflow: "hidden",
                                 display: "flex", flexDirection: "row", height: 48, flexWrap: "nowrap",
-                                alignItems: "center"
+                                alignItems: "center", gap: 6
                             }}>
+                                {uiPlugin && (
+                                    <span style={{
+                                        fontSize: "10px",
+                                        fontWeight: 800,
+                                        letterSpacing: "0.06em",
+                                        padding: "2px 7px",
+                                        borderRadius: 6,
+                                        background: `${catInfo.color}22`,
+                                        color: catInfo.color,
+                                        border: `1px solid ${catInfo.color}55`,
+                                        flex: "0 0 auto"
+                                    }}>
+                                        {catInfo.badge}
+                                    </span>
+                                )}
                                 <div style={{ position: "relative", flex: "0 1 auto", textAlign: "left", minWidth: 0, overflow: "hidden", textOverflow: "ellipsis" }}>
                                     {canEditTitle ? (
                                         <ButtonBase
                                             style={{
-                                                flex: "0 1 auto", borderRadius: "6px", width: "100%", paddingLeft: 8, paddingRight: 8, height: 48,
+                                                flex: "0 1 auto", borderRadius: "6px", width: "100%", paddingLeft: 6, paddingRight: 8, height: 42,
                                                 textTransform: "none", textAlign: "left", justifyItems: "start", overflow: "clip"
                                             }}
                                             onClick={() => {
@@ -499,9 +670,9 @@ export const MainPage =
                                                 {this.state.canDisplayPluginIcon && uiPlugin && (
                                                     <div style={{ flex: "0 0 auto", marginRight: 8 }}>
                                                         <PluginIcon
-                                                            pluginType={uiPlugin.plugin_type}
-                                                            color={getIconColor(pedalboardItem?.iconColor ?? "")}
-                                                            size={24}
+                                                            pluginType={pType}
+                                                            color={getIconColor(pedalboardItem?.iconColor ?? "") || catInfo.color}
+                                                            size={22}
                                                         />
                                                     </div>
                                                 )}
@@ -520,9 +691,9 @@ export const MainPage =
                                                 {this.state.canDisplayPluginIcon && uiPlugin && (
                                                     <div style={{ flex: "0 0 auto", marginRight: 8 }}>
                                                         <PluginIcon
-                                                            pluginType={uiPlugin.plugin_type}
-                                                            color={getIconColor(pedalboardItem?.iconColor ?? "")}
-                                                            size={24}
+                                                            pluginType={pType}
+                                                            color={getIconColor(pedalboardItem?.iconColor ?? "") || catInfo.color}
+                                                            size={22}
                                                         />
                                                     </div>
                                                 )}
@@ -658,29 +829,375 @@ export const MainPage =
                         }
                     }
                     let horizontalScrollLayout = this.state.horizontalScrollLayout;
+                    let selectedPluginType = uiPlugin ? uiPlugin.plugin_type : PluginType.Plugin;
+                    if (pluginUri === "http://two-play.com/plugins/toob-nam") {
+                        selectedPluginType = PluginType.NamPlugin;
+                    }
+                    let selectedCatInfo = getPluginCategoryInfo(selectedPluginType, pedalboardItem?.iconColor ?? "", pluginUri);
 
                     return (
                         <div className={classes.frame}>
-                            <div id="pedalboardScroll" className={horizontalScrollLayout ? classes.pedalboardScrollSmall : classes.pedalboardScroll}
-                                style={{ maxHeight: horizontalScrollLayout ? undefined : this.state.screenHeight / 2 }}>
-                                <PedalboardView key={pluginUri} selectedId={this.state.selectedPedal}
-                                    enableStructureEditing={this.props.enableStructureEditing}
-                                    onSelectionChanged={this.onSelectionChanged}
-                                    onDoubleClick={this.onPedalDoubleClick}
-                                    hasTinyToolBar={this.props.hasTinyToolBar}
-                                />
+                            <div
+                                className={classes.pedalboardStageWrapper}
+                                style={{
+                                    flex: `0 0 ${Math.min(this.state.stageHeight, Math.max(135, this.state.screenHeight - 160))}px`,
+                                    height: Math.min(this.state.stageHeight, Math.max(135, this.state.screenHeight - 160)),
+                                    minHeight: 135
+                                }}
+                            >
+                                <div id="pedalboardScroll" className={horizontalScrollLayout ? classes.pedalboardScrollSmall : classes.pedalboardScroll}>
+                                    <PedalboardView key={pluginUri} selectedId={this.state.selectedPedal}
+                                        enableStructureEditing={this.props.enableStructureEditing}
+                                        onSelectionChanged={this.onSelectionChanged}
+                                        onDoubleClick={this.onPedalDoubleClick}
+                                        hasTinyToolBar={this.props.hasTinyToolBar}
+                                        hardwareView={this.state.hardwareChainView}
+                                        chainZoom={this.state.chainZoom}
+                                        panX={this.state.panX}
+                                        panY={this.state.panY}
+                                        centerViewSeq={this.state.centerViewSeq}
+                                        onPanChange={this.handlePanChange}
+                                        onWheelZoom={this.handleWheelZoom}
+                                        onLayoutSizeChanged={this.handleLayoutSizeChanged}
+                                    />
+                                </div>
+
+                                {/* Dedicated Floating Controls Container — stays pinned on top when scrolling/zooming/resizing */}
+                                <div style={{
+                                    position: "absolute",
+                                    right: 14,
+                                    top: 10,
+                                    bottom: 10,
+                                    zIndex: 15,
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    justifyContent: "space-between",
+                                    alignItems: "flex-end",
+                                    gap: 6,
+                                    pointerEvents: "none"
+                                }}>
+                                    {/* Top-Right View Toggle Switch: Icons vs Pedals/Amps */}
+                                    <div style={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        padding: 3,
+                                        borderRadius: 999,
+                                        background: isDarkMode() ? "rgba(15, 20, 32, 0.92)" : "rgba(255, 255, 255, 0.94)",
+                                        border: isDarkMode() ? "1px solid rgba(255, 255, 255, 0.12)" : "1px solid rgba(15, 23, 42, 0.15)",
+                                        boxShadow: isDarkMode() ? "0 4px 12px rgba(0, 0, 0, 0.5)" : "0 2px 8px rgba(15, 23, 42, 0.1)",
+                                        backdropFilter: "blur(8px)",
+                                        pointerEvents: "auto"
+                                    }}>
+                                        <ButtonBase
+                                            onClick={() => {
+                                                window.localStorage.setItem("pipedal_hardware_chain_view", "false");
+                                                this.setState({ hardwareChainView: false });
+                                            }}
+                                            style={{
+                                                padding: "4px 10px",
+                                                borderRadius: 999,
+                                                fontSize: "10px",
+                                                fontWeight: 800,
+                                                letterSpacing: "0.06em",
+                                                color: !this.state.hardwareChainView ? "#0B0E15" : (isDarkMode() ? "#94A3B8" : "#64748B"),
+                                                background: !this.state.hardwareChainView ? "#00E5FF" : "transparent",
+                                                boxShadow: !this.state.hardwareChainView ? "0 0 8px rgba(0, 229, 255, 0.45)" : "none",
+                                                transition: "all 0.15s ease"
+                                            }}
+                                        >
+                                            ICONS
+                                        </ButtonBase>
+                                        <ButtonBase
+                                            onClick={() => {
+                                                window.localStorage.setItem("pipedal_hardware_chain_view", "true");
+                                                this.setState({ hardwareChainView: true });
+                                            }}
+                                            style={{
+                                                padding: "4px 10px",
+                                                borderRadius: 999,
+                                                fontSize: "10px",
+                                                fontWeight: 800,
+                                                letterSpacing: "0.06em",
+                                                color: this.state.hardwareChainView ? "#0B0E15" : (isDarkMode() ? "#94A3B8" : "#64748B"),
+                                                background: this.state.hardwareChainView ? "#00E5FF" : "transparent",
+                                                boxShadow: this.state.hardwareChainView ? "0 0 8px rgba(0, 229, 255, 0.45)" : "none",
+                                                transition: "all 0.15s ease"
+                                            }}
+                                        >
+                                            PEDALS
+                                        </ButtonBase>
+                                    </div>
+
+                                    {/* Middle-Right: Center View Button ABOVE Vertical Zoom Slider */}
+                                    <div style={{
+                                        display: "flex",
+                                        flexDirection: "column",
+                                        alignItems: "center",
+                                        gap: 6,
+                                        pointerEvents: "auto"
+                                    }}>
+                                        <ToolTipEx title="Center & Fit FX Chain to Maximum Visible Zoom">
+                                            <ButtonBase
+                                                onClick={this.handleCenterView}
+                                                style={{
+                                                    width: 38,
+                                                    height: 38,
+                                                    boxSizing: "border-box",
+                                                    borderRadius: 999,
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                    justifyContent: "center",
+                                                    background: isDarkMode() ? "rgba(15, 20, 32, 0.92)" : "rgba(255, 255, 255, 0.94)",
+                                                    border: isDarkMode()
+                                                        ? ((this.state.panX !== 0 || this.state.panY !== 0) ? "1.5px solid rgba(0, 229, 255, 0.65)" : "1px solid rgba(255, 255, 255, 0.14)")
+                                                        : "1px solid rgba(15, 23, 42, 0.16)",
+                                                    boxShadow: isDarkMode() ? "0 4px 12px rgba(0, 0, 0, 0.5)" : "0 2px 8px rgba(15, 23, 42, 0.1)",
+                                                    color: (this.state.panX !== 0 || this.state.panY !== 0)
+                                                        ? "#00E5FF"
+                                                        : (isDarkMode() ? "#E2E8F0" : "#334155"),
+                                                    backdropFilter: "blur(8px)"
+                                                }}
+                                            >
+                                                <CenterFocusStrongIcon style={{ width: 20, height: 20 }} />
+                                            </ButtonBase>
+                                        </ToolTipEx>
+
+                                        {/* Vertical FX Chain Zoom Slider */}
+                                        <div style={{
+                                            width: 38,
+                                            boxSizing: "border-box",
+                                            display: "flex",
+                                            flexDirection: "column",
+                                            alignItems: "center",
+                                            gap: 5,
+                                            padding: "7px 2px",
+                                            borderRadius: 999,
+                                            background: isDarkMode() ? "rgba(15, 20, 32, 0.92)" : "rgba(255, 255, 255, 0.94)",
+                                            border: isDarkMode() ? "1px solid rgba(255, 255, 255, 0.14)" : "1px solid rgba(15, 23, 42, 0.16)",
+                                            boxShadow: isDarkMode() ? "0 4px 12px rgba(0, 0, 0, 0.5)" : "0 2px 8px rgba(15, 23, 42, 0.1)",
+                                            backdropFilter: "blur(8px)"
+                                        }}>
+                                            <ButtonBase
+                                                title="Zoom In (+)"
+                                                onClick={() => {
+                                                    let nextZoom = Math.min(1.45, Math.round((this.state.chainZoom + 0.1) * 100) / 100);
+                                                    window.localStorage.setItem("pipedal_chain_zoom", nextZoom.toString());
+                                                    this.setState({ chainZoom: nextZoom });
+                                                }}
+                                                style={{
+                                                    borderRadius: 999,
+                                                    padding: 3,
+                                                    color: isDarkMode() ? "#F1F5F9" : "#1E293B"
+                                                }}
+                                            >
+                                                <ZoomInIcon style={{ width: 21, height: 21 }} />
+                                            </ButtonBase>
+                                            <div style={{ height: 58, display: "flex", alignItems: "center", justifyContent: "center", padding: "2px 0" }}>
+                                                <Slider
+                                                    orientation="vertical"
+                                                    size="small"
+                                                    min={0.65}
+                                                    max={1.45}
+                                                    step={0.05}
+                                                    value={this.state.chainZoom}
+                                                    onChange={(_e, val) => {
+                                                        let nextZoom = typeof val === "number" ? val : val[0];
+                                                        window.localStorage.setItem("pipedal_chain_zoom", nextZoom.toString());
+                                                        this.setState({ chainZoom: nextZoom });
+                                                    }}
+                                                    sx={{
+                                                        height: "100%",
+                                                        padding: "0 7px",
+                                                        color: "#00E5FF",
+                                                        "& .MuiSlider-thumb": {
+                                                            width: 13,
+                                                            height: 13,
+                                                        },
+                                                        "& .MuiSlider-rail": {
+                                                            opacity: 0.35,
+                                                        }
+                                                    }}
+                                                />
+                                            </div>
+                                            <ButtonBase
+                                                title="Zoom Out (-)"
+                                                onClick={() => {
+                                                    let nextZoom = Math.max(0.65, Math.round((this.state.chainZoom - 0.1) * 100) / 100);
+                                                    window.localStorage.setItem("pipedal_chain_zoom", nextZoom.toString());
+                                                    this.setState({ chainZoom: nextZoom });
+                                                }}
+                                                style={{
+                                                    borderRadius: 999,
+                                                    padding: 3,
+                                                    color: isDarkMode() ? "#F1F5F9" : "#1E293B"
+                                                }}
+                                            >
+                                                <ZoomOutIcon style={{ width: 21, height: 21 }} />
+                                            </ButtonBase>
+                                            <ButtonBase
+                                                title="Click to reset zoom to 100%"
+                                                onClick={() => {
+                                                    window.localStorage.setItem("pipedal_chain_zoom", "1");
+                                                    this.setState({ chainZoom: 1.0 });
+                                                }}
+                                                style={{
+                                                    fontSize: "9.5px",
+                                                    fontWeight: 800,
+                                                    lineHeight: 1.1,
+                                                    paddingTop: 1,
+                                                    textAlign: "center",
+                                                    color: this.state.chainZoom !== 1.0 ? "#00E5FF" : (isDarkMode() ? "#CBD5E1" : "#475569")
+                                                }}
+                                            >
+                                                {Math.round(this.state.chainZoom * 100)}%
+                                            </ButtonBase>
+                                        </div>
+                                    </div>
+
+                                    {this.props.enableStructureEditing && (canInsert || canAppend) ? (
+                                        <ButtonBase
+                                            onClick={(e) => { this.onAddClick(e); }}
+                                            style={{
+                                                display: "flex",
+                                                alignItems: "center",
+                                                gap: 5,
+                                                padding: "6px 13px",
+                                                borderRadius: 999,
+                                                background: isDarkMode()
+                                                    ? "rgba(20, 26, 40, 0.92)"
+                                                    : "rgba(255, 255, 255, 0.94)",
+                                                border: isDarkMode()
+                                                    ? "1px solid rgba(0, 229, 255, 0.35)"
+                                                    : "1px solid rgba(2, 132, 199, 0.35)",
+                                                boxShadow: isDarkMode()
+                                                    ? "0 4px 14px rgba(0, 0, 0, 0.5), 0 0 10px rgba(0, 229, 255, 0.15)"
+                                                    : "0 2px 8px rgba(15, 23, 42, 0.1)",
+                                                color: isDarkMode() ? "#00E5FF" : "#0284C7",
+                                                fontSize: "11px",
+                                                fontWeight: 800,
+                                                letterSpacing: "0.06em",
+                                                backdropFilter: "blur(8px)",
+                                                pointerEvents: "auto"
+                                            }}
+                                        >
+                                            <AddIcon style={{ width: 16, height: 16 }} />
+                                            <span>BLOCK / SPLIT</span>
+                                        </ButtonBase>
+                                    ) : <div />}
+                                </div>
                             </div>
-                            <div className={classes.separator} />
+
+                            {/* Interactive Section Resize Bar Between Top FX Stage & Bottom Controls */}
+                            <div
+                                onPointerDown={this.onStageResizePointerDown}
+                                onPointerMove={this.onStageResizePointerMove}
+                                onPointerUp={this.onStageResizePointerUp}
+                                onPointerCancel={this.onStageResizePointerUp}
+                                title="Drag up or down to resize top & bottom sections"
+                                style={{
+                                    position: "relative",
+                                    width: "100%",
+                                    height: 18,
+                                    flex: "0 0 18px",
+                                    cursor: "ns-resize",
+                                    touchAction: "none",
+                                    userSelect: "none",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    zIndex: 12,
+                                    background: isDarkMode() ? "rgba(15, 20, 32, 0.95)" : "rgba(241, 245, 249, 0.95)"
+                                }}
+                            >
+                                {/* Accent horizontal line */}
+                                <div style={{
+                                    position: "absolute",
+                                    left: 0,
+                                    right: 0,
+                                    top: "50%",
+                                    height: this.state.isResizingStage ? 2.5 : 1.5,
+                                    transform: "translateY(-50%)",
+                                    background: this.state.isResizingStage
+                                        ? "#00E5FF"
+                                        : (bypassVisible && bypassChecked
+                                            ? `linear-gradient(90deg, transparent 0%, ${selectedCatInfo.color} 50%, transparent 100%)`
+                                            : (isDarkMode() ? "rgba(255, 255, 255, 0.12)" : "rgba(15, 23, 42, 0.14)")),
+                                    opacity: this.state.isResizingStage ? 1 : (bypassVisible && bypassChecked ? 0.85 : 0.65)
+                                }} />
+                                {/* Center Resize Pill Handle Icon */}
+                                <div style={{
+                                    position: "relative",
+                                    zIndex: 2,
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    gap: 2,
+                                    padding: "2px 16px",
+                                    height: 22,
+                                    borderRadius: 999,
+                                    background: this.state.isResizingStage
+                                        ? "#00E5FF"
+                                        : (isDarkMode() ? "#1E2638" : "#E2E8F0"),
+                                    border: `1.5px solid ${this.state.isResizingStage ? "#00E5FF" : (isDarkMode() ? "rgba(255, 255, 255, 0.24)" : "rgba(15, 23, 42, 0.22)")}`,
+                                    boxShadow: this.state.isResizingStage
+                                        ? "0 0 14px rgba(0, 229, 255, 0.65)"
+                                        : "0 2px 8px rgba(0, 0, 0, 0.45)",
+                                    color: this.state.isResizingStage
+                                        ? "#0B0E15"
+                                        : (isDarkMode() ? "#E2E8F0" : "#334155"),
+                                    transition: "background 0.15s ease, color 0.15s ease"
+                                }}>
+                                    <DragHandleIcon style={{ width: 18, height: 18 }} />
+                                    <UnfoldMoreIcon style={{ width: 16, height: 16, marginLeft: -4 }} />
+                                </div>
+                            </div>
                             <div className={classes.controlToolBar}>
                                 <div style={{
                                     display: "flex", flexFlow: "row nowrap", alignItems: "center", justifyContent: "center", minWidth: 0,
-                                    width: "100%", height: 48, paddingLeft: 16, paddingRight: 16
+                                    width: "100%", maxWidth: 1280, marginLeft: "auto", marginRight: "auto", height: 54, paddingLeft: 16, paddingRight: 16
                                 }} >
-                                    <div style={{ flex: "0 0 auto", width: this.state.splitControlBar ? undefined : 60 }} >
-                                        <div style={{ display: bypassVisible ? "block" : "none", width: this.state.splitControlBar ? undefined : 60 }} >
-                                            <ToolTipEx title="Bypass"
+                                    <div style={{ flex: "0 0 auto", marginRight: 8 }} >
+                                        <div style={{ display: bypassVisible ? "flex" : "none", alignItems: "center" }} >
+                                            <ToolTipEx title={bypassChecked ? "Effect Active (Click to Bypass)" : "Effect Bypassed (Click to Enable)"}
                                             >
-                                                <Switch color="secondary" checked={bypassChecked} onChange={this.handleEnableCurrentItemChanged} />
+                                                <ButtonBase
+                                                    onClick={() => {
+                                                        if (pedalboardItem != null) {
+                                                            this.model.setPedalboardItemEnabled(pedalboardItem.getInstanceId(), !bypassChecked);
+                                                        }
+                                                    }}
+                                                    style={{
+                                                        display: "flex",
+                                                        alignItems: "center",
+                                                        gap: 7,
+                                                        padding: "5px 12px",
+                                                        borderRadius: 999,
+                                                        background: bypassChecked
+                                                            ? `${selectedCatInfo.color}22`
+                                                            : (isDarkMode() ? "rgba(255,255,255,0.05)" : "rgba(15,23,42,0.06)"),
+                                                        border: `1.5px solid ${bypassChecked ? selectedCatInfo.color : (isDarkMode() ? "rgba(255,255,255,0.15)" : "rgba(15,23,42,0.2)")}`,
+                                                        boxShadow: bypassChecked ? `0 0 12px ${selectedCatInfo.glow}` : "none",
+                                                        transition: "all 0.15s ease"
+                                                    }}
+                                                >
+                                                    <span style={{
+                                                        width: 9,
+                                                        height: 9,
+                                                        borderRadius: "50%",
+                                                        background: bypassChecked ? selectedCatInfo.color : "#64748B",
+                                                        boxShadow: bypassChecked ? `0 0 8px ${selectedCatInfo.color}` : "none"
+                                                    }} />
+                                                    <span style={{
+                                                        fontSize: "11px",
+                                                        fontWeight: 800,
+                                                        letterSpacing: "0.06em",
+                                                        color: bypassChecked
+                                                            ? (isDarkMode() ? "#F8FAFC" : "#0F172A")
+                                                            : "#94A3B8"
+                                                    }}>
+                                                        {bypassChecked ? "ON" : "BYPASS"}
+                                                    </span>
+                                                </ButtonBase>
                                             </ToolTipEx>
                                         </div>
                                     </div>
@@ -692,69 +1209,170 @@ export const MainPage =
 
                                     </div>
                                     {this.props.enableStructureEditing && (
-                                        <div style={{ flex: "0 0 auto", display: "flex", flexFlow: "row nowrap", alignItems: "center" }}>
+                                        <div style={{ flex: "0 0 auto", display: "flex", flexFlow: "row nowrap", alignItems: "center", gap: 4 }}>
                                             <div style={{ flex: "0 0 auto" }}>
                                                 <PluginPresetSelector pedalboardItem={pedalboardItem} instanceId={pedalboardItem?.instanceId ?? 0}
                                                 />
                                             </div>
 
-                                            <div style={{ flex: "0 0 auto", display: (canInsert || canAppend) ? "block" : "none" }}>
-                                                <IconButtonEx tooltip="Add pedal slot" onClick={(e) => { this.onAddClick(e) }} size="large">
-                                                    <AddIcon style={{ height: 24, width: 24, fill: this.props.theme.palette.text.primary, opacity: 0.6 }} />
-                                                </IconButtonEx>
-                                                <Menu
-                                                    id="add-menu"
-                                                    anchorEl={this.state.addMenuAnchorEl}
-                                                    keepMounted
-                                                    open={Boolean(this.state.addMenuAnchorEl)}
-                                                    onClose={() => this.handleAddClose()}
-                                                    TransitionComponent={Fade}
-                                                >
-                                                    {canInsert && (<MenuItem onClick={() => this.onInsertPedal(instanceId)}>Insert pedal</MenuItem>)}
-                                                    {canAppend && (<MenuItem onClick={() => this.onAppendPedal(instanceId)}>Append pedal</MenuItem>)}
-                                                    <Divider />
-                                                    {canInsert && (<MenuItem onClick={() => this.onInsertSplit(instanceId)}>Insert split</MenuItem>)}
-                                                    {canAppend && (<MenuItem onClick={() => this.onAppendSplit(instanceId)}>Append split</MenuItem>)}
-                                                </Menu>
-                                            </div>
-                                            <div style={{ flex: "0 0 auto", display: canDelete ? "block" : "none",  }}>
-                                                <IconButtonEx tooltip="Delete pedal"
+                                            <Menu
+                                                id="add-menu"
+                                                anchorEl={this.state.addMenuAnchorEl}
+                                                keepMounted
+                                                open={Boolean(this.state.addMenuAnchorEl)}
+                                                onClose={() => this.handleAddClose()}
+                                                TransitionComponent={Fade}
+                                            >
+                                                {canInsert && (<MenuItem onClick={() => this.onInsertPedal(instanceId)}>Insert pedal</MenuItem>)}
+                                                {canAppend && (<MenuItem onClick={() => this.onAppendPedal(instanceId)}>Append pedal</MenuItem>)}
+                                                <Divider />
+                                                {canInsert && (<MenuItem onClick={() => this.onInsertSplit(instanceId)}>Insert split</MenuItem>)}
+                                                {canAppend && (<MenuItem onClick={() => this.onAppendSplit(instanceId)}>Append split</MenuItem>)}
+                                            </Menu>
+                                            <div style={{ flex: "0 0 auto", display: canDelete ? "block" : "none" }}>
+                                                <IconButtonEx tooltip="Remove block from chain"
                                                     onClick={() => { this.onDeletePedal(pedalboardItem?.instanceId ?? -1) }}
                                                     size="large">
-                                                    <OldDeleteIcon style={{ height: 24, width: 24, fill: this.props.theme.palette.text.primary, opacity: 0.6 }} />
+                                                    <OldDeleteIcon style={{ height: 22, width: 22, fill: this.props.theme.palette.text.primary, opacity: 0.7 }} />
                                                 </IconButtonEx>
                                             </div>
-                                            <div style={{ flex: "0 0 auto" }}>
+                                            <div style={{ flex: "0 0 auto", marginLeft: 4, marginRight: 4 }}>
                                                 <ButtonEx
                                                     variant="contained"
                                                     color="primary"
                                                     size="small"
-                                                    tooltip="Load plugin"
+                                                    tooltip="Select Effect / Amp / NAM Plugin"
                                                     onClick={this.onLoadClick}
                                                     disabled={this.state.selectedPedal === -1 || (!canLoad) || (this.getSelectedPedalboardItem()?.isSplit() ?? true)}
-                                                    startIcon={<InputIcon />}
+                                                    startIcon={<InputIcon style={{ width: 16, height: 16 }} />}
                                                     style={{
                                                         textTransform: "none",
-                                                        background: (isDarkMode() ? "#6750A4" : undefined)
+                                                        fontWeight: 700,
+                                                        fontSize: "12px",
+                                                        letterSpacing: "0.02em",
+                                                        borderRadius: 999,
+                                                        padding: "5px 14px",
+                                                        background: isDarkMode()
+                                                            ? `linear-gradient(135deg, ${selectedCatInfo.color}CC 0%, #2563EB 100%)`
+                                                            : undefined,
+                                                        color: "#FFFFFF",
+                                                        boxShadow: isDarkMode() ? `0 2px 10px ${selectedCatInfo.glow}` : undefined
                                                     }}
                                                 >
-                                                    Load
+                                                    {pedalboardItem?.isEmpty() ? "Select FX" : "Change FX"}
                                                 </ButtonEx>
                                             </div>
                                             <div style={{ flex: "0 0 auto" }}>
                                                 <IconButtonEx tooltip="MIDI bindings"
                                                     onClick={(e) => { this.handleMidiConfiguration(instanceId); }}
                                                     size="large">
-                                                    <MidiIcon style={{ height: 24, width: 24, fill: this.props.theme.palette.text.primary, opacity: 0.6 }} />
+                                                    <MidiIcon style={{ height: 22, width: 22, fill: this.props.theme.palette.text.primary, opacity: 0.7 }} />
                                                 </IconButtonEx>
                                             </div>
-                                            <div style={{ flex: "0 0 auto" }}>
-                                                <IconButtonEx tooltip="Snapshots"
-                                                    onClick={(e) => { this.setState({ snapshotDialogOpen: true }); }}
-                                                    size="large">
-                                                    {this.snapshotIcon(this.props.theme, this.state.selectedSnapshot)}
-                                                </IconButtonEx>
-                                            </div>
+                                            {!this.state.splitControlBar ? (
+                                                <div style={{
+                                                    flex: "0 0 auto",
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                    gap: 3,
+                                                    padding: "3px 6px",
+                                                    borderRadius: 999,
+                                                    background: isDarkMode() ? "rgba(11, 14, 21, 0.75)" : "rgba(15, 23, 42, 0.06)",
+                                                    border: isDarkMode() ? "1px solid rgba(255, 255, 255, 0.08)" : "1px solid rgba(15, 23, 42, 0.12)",
+                                                    marginLeft: 4
+                                                }}>
+                                                    <span style={{
+                                                        fontSize: "9.5px",
+                                                        fontWeight: 800,
+                                                        letterSpacing: "0.06em",
+                                                        color: isDarkMode() ? "#64748B" : "#475569",
+                                                        paddingLeft: 4,
+                                                        paddingRight: 3
+                                                    }}>
+                                                        SCENES
+                                                    </span>
+                                                    {[0, 1, 2, 3, 4, 5].map((sceneIdx) => {
+                                                        const sceneSnap = pedalboard.snapshots && sceneIdx < pedalboard.snapshots.length
+                                                            ? pedalboard.snapshots[sceneIdx]
+                                                            : null;
+                                                        const isSceneSelected = this.state.selectedSnapshot === sceneIdx;
+                                                        const hasSceneData = sceneSnap !== null;
+                                                        const sceneName = sceneSnap?.name ? `Scene ${sceneIdx + 1}: ${sceneSnap.name}` : (hasSceneData ? `Scene ${sceneIdx + 1}` : `Scene ${sceneIdx + 1} (Empty - click to configure)`);
+                                                        return (
+                                                            <ToolTipEx key={sceneIdx} title={sceneName}>
+                                                                <ButtonBase
+                                                                    onClick={() => {
+                                                                        if (hasSceneData) {
+                                                                            this.model.selectSnapshot(sceneIdx);
+                                                                        } else {
+                                                                            this.setState({ snapshotDialogOpen: true });
+                                                                        }
+                                                                    }}
+                                                                    style={{
+                                                                        width: 24,
+                                                                        height: 24,
+                                                                        borderRadius: 999,
+                                                                        fontSize: "11px",
+                                                                        fontWeight: 800,
+                                                                        position: "relative",
+                                                                        color: isSceneSelected
+                                                                            ? "#0B0E15"
+                                                                            : (hasSceneData ? (isDarkMode() ? "#E2E8F0" : "#0F172A") : "#64748B"),
+                                                                        background: isSceneSelected
+                                                                            ? "#00E5FF"
+                                                                            : (hasSceneData ? (isDarkMode() ? "rgba(255,255,255,0.09)" : "rgba(15,23,42,0.09)") : "transparent"),
+                                                                        boxShadow: isSceneSelected ? "0 0 10px rgba(0, 229, 255, 0.55)" : "none",
+                                                                        transition: "all 0.12s ease"
+                                                                    }}
+                                                                >
+                                                                    {sceneIdx + 1}
+                                                                    {hasSceneData && !isSceneSelected && (
+                                                                        <span style={{
+                                                                            position: "absolute",
+                                                                            bottom: 2,
+                                                                            width: 3.5,
+                                                                            height: 3.5,
+                                                                            borderRadius: "50%",
+                                                                            background: "#00E5FF"
+                                                                        }} />
+                                                                    )}
+                                                                </ButtonBase>
+                                                            </ToolTipEx>
+                                                        );
+                                                    })}
+                                                    <div style={{
+                                                        width: 1,
+                                                        height: 14,
+                                                        background: isDarkMode() ? "rgba(255, 255, 255, 0.12)" : "rgba(15, 23, 42, 0.14)",
+                                                        marginLeft: 2,
+                                                        marginRight: 1
+                                                    }} />
+                                                    <ToolTipEx title="Configure Scenes / Snapshots (1–6)">
+                                                        <ButtonBase
+                                                            onClick={() => { this.setState({ snapshotDialogOpen: true }); }}
+                                                            style={{
+                                                                width: 24,
+                                                                height: 24,
+                                                                borderRadius: 999,
+                                                                display: "flex",
+                                                                alignItems: "center",
+                                                                justifyContent: "center",
+                                                                color: isDarkMode() ? "#94A3B8" : "#475569"
+                                                            }}
+                                                        >
+                                                            <SettingsIcon style={{ width: 15, height: 15 }} />
+                                                        </ButtonBase>
+                                                    </ToolTipEx>
+                                                </div>
+                                            ) : (
+                                                <div style={{ flex: "0 0 auto" }}>
+                                                    <IconButtonEx tooltip="Configure Scenes / Snapshots (1–6)"
+                                                        onClick={() => { this.setState({ snapshotDialogOpen: true }); }}
+                                                        size="large">
+                                                        <SettingsIcon style={{ height: 20, width: 20, opacity: 0.75 }} />
+                                                    </IconButtonEx>
+                                                </div>
+                                            )}
                                         </div>
                                     )}
                                 </div>

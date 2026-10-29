@@ -56,6 +56,7 @@ import ToolTipEx from './ToolTipEx';
 import MidiChannelBindingControl from './MidiChannelBindingControl';
 import MidiChannelBinding from './MidiChannelBinding';
 import PatchPropertyControl from './PatchPropertyControl';
+import { isDarkMode } from './DarkMode';
 
 
 export const StandardItemSize = { width: 80, height: 110 };
@@ -146,7 +147,7 @@ const styles = (theme: Theme) => createStyles({
         paddingTop: "0px",
         paddingBottom: "0px",
         overflowX: "auto",
-        overflowY: "hidden"
+        overflowY: "auto"
     }),
     frameScrollLandscape: css({
         display: "block",
@@ -155,9 +156,9 @@ const styles = (theme: Theme) => createStyles({
         flexDirection: "row",
         flexWrap: "nowrap",
         paddingTop: "0px",
-        paddingBottom: "0px",
+        paddingBottom: "24px",
         overflowX: "auto",
-        overflowY: "hidden"
+        overflowY: "auto"
     }),
     frameScrollPortrait: css({
         display: "block",
@@ -166,8 +167,8 @@ const styles = (theme: Theme) => createStyles({
         flexDirection: "row",
         flexWrap: "nowrap",
         paddingTop: "0px",
-        paddingBottom: "96px",
-        overflowX: "hidden",
+        paddingBottom: "48px",
+        overflowX: "auto",
         overflowY: "auto",
     }),
     vuMeterL: css({
@@ -205,9 +206,9 @@ const styles = (theme: Theme) => createStyles({
         position: "relative",
         left: 0,
         top: 0,
-        bottom: 0,
         width: "100%",
-        height: "100%",
+        minHeight: "100%",
+        height: "auto",
         paddingLeft: 30,
         paddingRight: 45,
         paddingTop: 0,
@@ -217,31 +218,34 @@ const styles = (theme: Theme) => createStyles({
 
     normalGrid: css({
         position: "relative",
-        paddingLeft: 30,
-        paddingRight: 45,
-        paddingTop: 8,
+        paddingLeft: 44,
+        paddingRight: 48,
+        paddingTop: 14,
 
         flex: "1 1 auto",
         display: "flex", flexDirection: "row", flexWrap: "wrap",
-        justifyContent: "flex-start", alignItems: "flex_start",
-        rowGap: 14,
-        height: "fit-content"
-
-
-
+        justifyContent: "center", alignItems: "flex-start",
+        rowGap: 16,
+        columnGap: 6,
+        height: "fit-content",
+        maxWidth: 1180,
+        marginLeft: "auto",
+        marginRight: "auto"
     }),
     landscapeGrid: css({
-        paddingLeft: 40, paddingRight: 40, paddingTop: 8,
+        paddingLeft: 44, paddingRight: 44, paddingTop: 12,
         // marginRight: 40, : bug in chrome layout engine wrt/ right margin/padding. 
         // See the spacer div added after all controls in render() with provides the same effect.
         display: "flex", flexDirection: "row", flexWrap: "nowrap",
-        justifyContent: "flex-start", alignItems: "flex-start",
+        justifyContent: "center", alignItems: "flex-start",
         position: "relative",
 
         overflowX: "hidden",
         overflowY: "hidden",
         flex: "0 0 auto",
-        width: "fit-content"
+        width: "fit-content",
+        marginLeft: "auto",
+        marginRight: "auto"
     }),
     portgroupControlPadding: css({
         flex: "0 0 auto",
@@ -254,34 +258,35 @@ const styles = (theme: Theme) => createStyles({
         flex: "0 0 auto",
         marginTop: 0,
         marginBottom: 0,
-        height: 116
+        height: 128
 
     }),
     controlPair: css({
         display: "flex", flexFlow: "row nowrap",
         flex: "0 0 auto",
-        height: 116
+        height: 128
     }),
     controlSpacer: css({
         display: "none",
         minWidth: 0,
         width: 0,
-        height: 116
+        height: 128
     }),
 
     portGroup: css({
         marginLeft: 8,
-        marginTop: 0,
+        marginTop: 4,
         marginRight: 8,
         marginBottom: 12,
         position: "relative",
-        paddingLeft: 3,
-        paddingRight: 8,
-        paddingTop: 0,
-        paddingBottom: 0,
-        border: "2pt #AAA solid",
-        borderRadius: 8,
-        elevation: 12,
+        paddingLeft: 8,
+        paddingRight: 10,
+        paddingTop: 6,
+        paddingBottom: 4,
+        border: isDarkMode() ? "1px solid rgba(255, 255, 255, 0.12)" : "1px solid rgba(15, 23, 42, 0.16)",
+        background: isDarkMode() ? "rgba(255, 255, 255, 0.025)" : "rgba(15, 23, 42, 0.02)",
+        borderRadius: 12,
+        boxShadow: isDarkMode() ? "inset 0 1px 0 rgba(255, 255, 255, 0.04)" : "none",
         display: "flex",
         flexDirection: "row", flexWrap: "wrap",
 
@@ -289,18 +294,19 @@ const styles = (theme: Theme) => createStyles({
     }),
     portGroupLandscape: css({
         marginLeft: 8,
-        marginTop: 0,
+        marginTop: 4,
         marginRight: 8,
         marginBottom: 12,
         position: "relative",
-        paddingLeft: 0,
-        paddingRight: 0,
+        paddingLeft: 6,
+        paddingRight: 6,
 
-        paddingTop: 0,
-        paddingBottom: 0,
-        border: "2pt #AAA solid",
-        borderRadius: 8,
-        elevation: 12,
+        paddingTop: 6,
+        paddingBottom: 4,
+        border: isDarkMode() ? "1px solid rgba(255, 255, 255, 0.12)" : "1px solid rgba(15, 23, 42, 0.16)",
+        background: isDarkMode() ? "rgba(255, 255, 255, 0.025)" : "rgba(15, 23, 42, 0.02)",
+        borderRadius: 12,
+        boxShadow: isDarkMode() ? "inset 0 1px 0 rgba(255, 255, 255, 0.04)" : "none",
         display: "inline-flex",
         textOverflow: "ellipsis",
         flexDirection: "row", flexWrap: "nowrap",
@@ -310,14 +316,20 @@ const styles = (theme: Theme) => createStyles({
     }),
     portGroupTitle: css({
         position: "absolute",
-        top: -15,
-        background: theme.mainBackground,
+        top: -10,
+        background: isDarkMode() ? "#131722" : theme.mainBackground,
+        border: isDarkMode() ? "1px solid rgba(255, 255, 255, 0.12)" : "1px solid rgba(15, 23, 42, 0.14)",
+        borderRadius: 6,
         textOverflow: "ellipsis",
         minWidth: 0,
-        marginLeft: 20,
+        marginLeft: 12,
         paddingLeft: 8,
         paddingRight: 8,
-        margin_right: 28
+        margin_right: 28,
+        fontSize: "10px",
+        fontWeight: 700,
+        letterSpacing: "0.05em",
+        textTransform: "uppercase"
     }),
     portGroupControls: css({
         display: "flex",
@@ -548,7 +560,7 @@ const PluginControlView =
                     let previousControl = controls[controls.length - 1];
                     if (!(previousControl instanceof ControlGroup)) {
                         let pair = (
-                            <div key={"k" + this.ixKey++} className={classes.controlPair}>
+                            <div key={"pair_" + pluginControl.symbol + "_" + this.ixKey++} className={classes.controlPair}>
                                 {previousControl as ReactNode}
                                 {newControl}
                             </div>
@@ -558,7 +570,7 @@ const PluginControlView =
                         // (e.g.. inserting at position 4 still places the extended control after four previous controls
                         controls.push((
 
-                            <div key={"k" + this.ixKey++} className={classes.controlSpacer} />
+                            <div key={"spacer_" + pluginControl.symbol + "_" + this.ixKey++} className={classes.controlSpacer} />
                         ));
                     } else {
                         controls.push(newControl);
@@ -996,6 +1008,7 @@ const PluginControlView =
             }
             renderPiPedalControl(pedalboardItem?: PedalboardItem): ReactNode {
                 this.controlKeyIndex = 0;
+                this.ixKey = 0;
 
 
                 const classes = withStyles.getClasses(this.props);

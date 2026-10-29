@@ -35,8 +35,9 @@ import Switch from '@mui/material/Switch';
 import Utility from './Utility';
 import MenuItem from '@mui/material/MenuItem';
 import { PiPedalModel, PiPedalModelFactory } from './PiPedalModel';
-import DialIcon from './svg/fx_dial.svg?react';
 import { isDarkMode } from './DarkMode';
+import { getPluginCategoryInfo } from './PluginIcon';
+import { PluginType } from './Lv2Plugin';
 
 
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
@@ -47,6 +48,20 @@ import GraphicEqCtl, { UpdateGraphicEqPath } from './GraphicEqCtl';
 const MIN_ANGLE = -135;
 const MAX_ANGLE = 135;
 const FONT_SIZE = "0.8em";
+
+function describeDialArc(cx: number, cy: number, r: number, startAngleDeg: number, endAngleDeg: number): string {
+    if (Math.abs(endAngleDeg - startAngleDeg) < 0.5) {
+        return "";
+    }
+    let startRad = (startAngleDeg * Math.PI) / 180.0;
+    let endRad = (endAngleDeg * Math.PI) / 180.0;
+    let x1 = cx + r * Math.sin(startRad);
+    let y1 = cy - r * Math.cos(startRad);
+    let x2 = cx + r * Math.sin(endRad);
+    let y2 = cy - r * Math.cos(endRad);
+    let largeArc = (endAngleDeg - startAngleDeg) > 180 ? 1 : 0;
+    return `M ${x1.toFixed(2)} ${y1.toFixed(2)} A ${r} ${r} 0 ${largeArc} 1 ${x2.toFixed(2)} ${y2.toFixed(2)}`;
+}
 
 
 function isMobileDevice() {
@@ -113,18 +128,18 @@ export const pluginControlStyles = (theme: Theme) => createStyles({
         opacity: theme.palette.mode === 'light' ? 0.38 : 0.3
     }),
     controlFrame: css({
-        display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "space-between", height: 116
+        display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "space-between", height: 128
     }),
 
     titleSection: css({
-        flex: "0 0 auto", alignSelf: "stretch", marginBottom: 8, marginLeft: 0, marginRight: 0
+        flex: "0 0 auto", alignSelf: "stretch", marginBottom: 4, marginLeft: 0, marginRight: 0
     }),
     displayValue: css({
         position: "absolute",
         top: 0,
         left: 0,
         right: 0,
-        bottom: 4,
+        bottom: 2,
         textAlign: "center",
         background: "transparent",
         color: theme.palette.text.secondary,
@@ -134,7 +149,7 @@ export const pluginControlStyles = (theme: Theme) => createStyles({
         flex: "1 1 1", display: "flex", flexFlow: "column nowrap", alignContent: "center", justifyContent: "center"
     }),
     editSection: css({
-        flex: "0 0 0", display: "flex", flexFlow: "column nowrap", justifyContent: "center", position: "relative", width: 60, height: 28, minHeight: 28
+        flex: "0 0 auto", display: "flex", flexFlow: "column nowrap", justifyContent: "center", alignItems: "center", position: "relative", width: 78, height: 28, minHeight: 28
     })
 
 });
@@ -221,6 +236,7 @@ const PluginControl =
 
             frameRef: React.RefObject<HTMLDivElement | null>;
             imgRef: React.RefObject<SVGSVGElement | null>;
+            valueArcRef: React.RefObject<SVGPathElement | null>;
             graphicEqControlRef: React.RefObject<SVGSVGElement | null>;
             inputRef: React.RefObject<HTMLInputElement | null>;
             selectRef: React.RefObject<HTMLSelectElement | null>;
@@ -240,6 +256,7 @@ const PluginControl =
                 };
                 this.model = PiPedalModelFactory.getInstance();
                 this.imgRef = React.createRef();
+                this.valueArcRef = React.createRef();
                 this.graphicEqControlRef = React.createRef();
                 this.inputRef = React.createRef();
                 this.selectRef = React.createRef();
@@ -698,10 +715,14 @@ const PluginControl =
 
                         let transform = this.rangeToRotationTransform(range);
                         if (this.mouseDown && !commitValue) {
-                            transform += " scale(1.5, 1.5)";
+                            transform += " scale(1.12, 1.12)";
                         }
                         if (imgElement.style) {
                             imgElement.style.transform = transform;
+                        }
+                        if (this.valueArcRef.current) {
+                            let angle = range * (MAX_ANGLE - MIN_ANGLE) + MIN_ANGLE;
+                            this.valueArcRef.current.setAttribute("d", describeDialArc(24, 24, 19.5, MIN_ANGLE, angle));
                         }
                     }
                 }
@@ -719,8 +740,8 @@ const PluginControl =
                 let uiControl = this.props.uiControl;
                 if (!uiControl) return null;
 
-                const SIZE = 46;
-                const STROKE_WIDTH = 2;
+                const SIZE = 56;
+                const STROKE_WIDTH = 2.2;
                 let arcs: ReactNode[] = [];
                 let lastValue = 0;
                 for (let i = 0; i < weights.length; ++i) {
@@ -774,6 +795,10 @@ const PluginControl =
                         if (imgElement.style) {
                             imgElement.style.transform = this.rangeToRotationTransform(range);
                         }
+                    }
+                    if (this.valueArcRef.current) {
+                        let angle = range * (MAX_ANGLE - MIN_ANGLE) + MIN_ANGLE;
+                        this.valueArcRef.current.setAttribute("d", describeDialArc(24, 24, 19.5, MIN_ANGLE, angle));
                     }
                 }
                 let inputElement = this.inputRef.current;
@@ -903,6 +928,113 @@ const PluginControl =
                 if (range <= 1000) return 10;
                 return 100;
             }
+            getAccentColor(): string {
+                try {
+                    let pb = this.model.pedalboard.get();
+                    if (pb) {
+                        let item = pb.maybeGetItem(this.props.instanceId);
+                        if (item) {
+                            let uiPlugin = this.model.getUiPlugin(item.uri);
+                            let pType = uiPlugin ? uiPlugin.plugin_type : PluginType.Plugin;
+                            if (item.uri === "http://two-play.com/plugins/toob-nam") {
+                                pType = PluginType.NamPlugin;
+                            }
+                            return getPluginCategoryInfo(pType, item.iconColor, item.uri).color;
+                        }
+                    }
+                } catch (_e) {
+                    // ignore
+                }
+                return "#00E5FF";
+            }
+
+            renderStudioKnob(accentColor: string, size: number = 56): React.ReactElement {
+                let range = this.props.uiControl?.valueToRange(this.props.value) ?? 0;
+                let angle = range * (MAX_ANGLE - MIN_ANGLE) + MIN_ANGLE;
+                let bgArcPath = describeDialArc(24, 24, 19.5, MIN_ANGLE, MAX_ANGLE);
+                let valArcPath = describeDialArc(24, 24, 19.5, MIN_ANGLE, angle);
+                let isDark = isDarkMode();
+
+                return (
+                    <div style={{ position: "relative", width: size, height: size, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        {/* Outer Stationary Track & Glowing Value Arc */}
+                        <svg
+                            viewBox="0 0 48 48"
+                            style={{
+                                position: "absolute",
+                                left: 0,
+                                top: 0,
+                                width: size,
+                                height: size,
+                                pointerEvents: "none",
+                                overflow: "visible"
+                            }}
+                        >
+                            <path
+                                d={bgArcPath}
+                                fill="none"
+                                stroke={isDark ? "rgba(255, 255, 255, 0.14)" : "rgba(15, 23, 42, 0.15)"}
+                                strokeWidth={3.4}
+                                strokeLinecap="round"
+                            />
+                            <path
+                                ref={this.valueArcRef}
+                                d={valArcPath}
+                                fill="none"
+                                stroke={accentColor}
+                                strokeWidth={3.6}
+                                strokeLinecap="round"
+                                style={{ filter: isDark ? `drop-shadow(0 0 5px ${accentColor}AA)` : "none" }}
+                            />
+                        </svg>
+                        {/* Rotating Hardware Encoder Cap (receives all pointer events & CSS rotation) */}
+                        <svg
+                            ref={this.imgRef}
+                            viewBox="0 0 48 48"
+                            style={{
+                                width: size,
+                                height: size,
+                                overscrollBehavior: "none",
+                                touchAction: "none",
+                                cursor: "ns-resize",
+                                opacity: DEFAULT_OPACITY,
+                                transform: this.getRotationTransform()
+                            }}
+                            onTouchStart={this.onTouchStart}
+                            onTouchMove={this.onTouchMove}
+                            onPointerDown={this.onPointerDown}
+                            onPointerUp={this.onPointerUp}
+                            onPointerMove={this.onPointerMove}
+                            onDrag={this.onDrag}
+                        >
+                            <defs>
+                                <radialGradient id="studioKnobCap" cx="50%" cy="35%" r="65%">
+                                    <stop offset="0%" stopColor={isDark ? "#333D52" : "#F8FAFC"} />
+                                    <stop offset="100%" stopColor={isDark ? "#141824" : "#CBD5E1"} />
+                                </radialGradient>
+                            </defs>
+                            <circle
+                                cx="24"
+                                cy="24"
+                                r="14.5"
+                                fill="url(#studioKnobCap)"
+                                stroke={isDark ? "rgba(255,255,255,0.24)" : "rgba(15,23,42,0.25)"}
+                                strokeWidth="1.2"
+                            />
+                            <rect
+                                x="22.4"
+                                y="10.4"
+                                width="3.2"
+                                height="9.2"
+                                rx="1.6"
+                                ry="1.6"
+                                fill={accentColor}
+                            />
+                        </svg>
+                    </div>
+                );
+            }
+
             render() {
                 const classes = withStyles.getClasses(this.props);
                 let t = this.props.uiControl;
@@ -911,6 +1043,7 @@ const PluginControl =
 
                 }
                 let dialColor = this.props.theme.palette.text.primary;
+                let accentColor = this.getAccentColor();
                 let control: UiControl = t;
                 this.uiControl = control;
                 let value = this.props.value;
@@ -942,7 +1075,7 @@ const PluginControl =
                     switchText = control.scale_points[0].value === value ? control.scale_points[0].label : control.scale_points[1].label;
                 }
 
-                let item_width: number | undefined = isSelect ? 160 : 80;
+                let item_width: number | undefined = isSelect ? 168 : 84;
                 if (isButton) {
                     item_width = undefined;
                 }
@@ -960,12 +1093,16 @@ const PluginControl =
                         <div className={classes.titleSection}
                             style={
                                 {
-                                    alignSelf: "stretch", marginBottom: 8, marginLeft: isSelect ? 8 : 0, marginRight: 0
+                                    alignSelf: "stretch", marginBottom: 6, marginLeft: isSelect ? 8 : 0, marginRight: 0
 
                                 }}>
                             <Typography variant="caption" display="block" noWrap style={{
                                 width: "100%",
-                                textAlign: isSelect ? "left" : "center"
+                                textAlign: isSelect ? "left" : "center",
+                                fontWeight: 600,
+                                fontSize: "11px",
+                                letterSpacing: "0.03em",
+                                color: isDarkMode() ? "#CBD5E1" : "#334155"
                             }}> {isButton ? "\u00A0" : control.name}</Typography>
                         </div>
                         {/* CONTROL SECTION */}
@@ -1002,9 +1139,13 @@ const PluginControl =
 
                                                 style={{
                                                     textTransform: "none",
-                                                    background: (isDarkMode() ? "#6750A4" : undefined),
-                                                    marginLeft: 8, marginRight: 8, minWidth: 60,
-                                                    marginTop: 0
+                                                    background: (isDarkMode() ? "#1E293B" : undefined),
+                                                    border: `1px solid ${accentColor}66`,
+                                                    color: isDarkMode() ? "#F8FAFC" : undefined,
+                                                    marginLeft: 8, marginRight: 8, minWidth: 64,
+                                                    marginTop: 0,
+                                                    borderRadius: 8,
+                                                    fontWeight: 600
 
                                                 }}
 
@@ -1040,12 +1181,13 @@ const PluginControl =
 
                                                 style={{
                                                     textTransform: "none",
-                                                    background: (isDarkMode() ? "#6750A4" : undefined),
+                                                    background: (isDarkMode() ? "#1E293B" : undefined),
+                                                    border: `1px solid ${accentColor}66`,
                                                     marginLeft: 8, marginRight: 8,
                                                     paddingLeft: 0, paddingRight: 0,
-                                                    width: 36, height: 36,
+                                                    width: 38, height: 38,
                                                     marginTop: 0,
-                                                    borderRadius: 8,
+                                                    borderRadius: 10,
                                                     minWidth: 0,
                                                     fontSize: "1.2em"
 
@@ -1085,21 +1227,10 @@ const PluginControl =
                                         <div style={{ flex: "0 1 auto" }}>
                                             <ControlTooltip uiControl={control}
                                                 valueTooltip={this.state.previewValue}>
-                                                <div style={{ display: "grid", placeItems: "center", position: "relative",  }}>
+                                                <div style={{ display: "grid", placeItems: "center", position: "relative" }}>
                                                     {this.modelWeightRing(this.props.options.slimmableWeights, this.props.value)}
-                                                    <div style={{ position: "absolute", left: 4.5, top: 4.5, width: 36, height: 36  }}>
-                                                        <DialIcon ref={this.imgRef}
-                                                            style={{
-                                                                position: "absolute", left: "0", top: "0", transform: `${this.getRotationTransform()}`,
-                                                                overscrollBehavior: "none", touchAction: "none", fill: dialColor,
-                                                                width: 36, height: 36, opacity: DEFAULT_OPACITY
-                                                            }}
-                                                            onTouchStart={this.onTouchStart} onTouchMove={this.onTouchMove}
-                                                            onPointerDown={this.onPointerDown} onPointerUp={this.onPointerUp}
-                                                            onPointerMove={this.onPointerMove}
-                                                            onDrag={this.onDrag}
-
-                                                        />
+                                                    <div style={{ position: "absolute", left: 0, top: 0, width: 56, height: 56 }}>
+                                                        {this.renderStudioKnob(accentColor, 56)}
                                                     </div>
                                                 </div>
                                             </ControlTooltip>
@@ -1108,17 +1239,7 @@ const PluginControl =
                                         <div style={{ flex: "0 1 auto" }}>
                                             <ControlTooltip uiControl={control}
                                                 valueTooltip={this.state.previewValue}>
-                                                <DialIcon ref={this.imgRef}
-                                                    style={{
-                                                        overscrollBehavior: "none", touchAction: "none", fill: dialColor,
-                                                        width: 36, height: 36, opacity: DEFAULT_OPACITY, transform: this.getRotationTransform()
-                                                    }}
-                                                    onTouchStart={this.onTouchStart} onTouchMove={this.onTouchMove}
-                                                    onPointerDown={this.onPointerDown} onPointerUp={this.onPointerUp}
-                                                    onPointerMove={this.onPointerMove}
-                                                    onDrag={this.onDrag}
-
-                                                />
+                                                {this.renderStudioKnob(accentColor, 56)}
                                             </ControlTooltip>
                                         </div>
                                     )
@@ -1131,13 +1252,15 @@ const PluginControl =
                                 (
                                     (isAbSwitch) ? (
                                         <Typography variant="caption" display="block" textAlign="center" noWrap style={{
-                                            width: "100%"
+                                            width: "100%",
+                                            fontWeight: 600
                                         }}> {switchText} </Typography>
                                     ) : (
                                         <div>
                                             <Input key={value}
                                                 defaultValue={control.formatShortValue(value)}
                                                 error={this.state.error}
+                                                disableUnderline={!this.state.editFocused}
                                                 inputProps={{
                                                     className: "scrollMod",
                                                     type: isMobileDevice() ? "text" : "number",
@@ -1154,7 +1277,7 @@ const PluginControl =
                                                 sx={{
                                                     // Style the input element
                                                     '& input': {
-                                                        width: 60,
+                                                        width: 74,
                                                         opacity: this.state.editFocused ? 1 : 0,
                                                         textAlign: "center", fontSize: FONT_SIZE,
                                                         borderBottom: "0px",
@@ -1168,10 +1291,25 @@ const PluginControl =
                                                 onKeyPress={this.onInputKeyPress} />
                                             <div className={classes.displayValue}
                                                 ref={this.displayValueRef} onClick={(e) => { this.inputRef.current!.focus(); }}
-                                                style={{ display: this.state.editFocused ? "none" : "block" }}
+                                                style={{
+                                                    display: this.state.editFocused ? "none" : "flex",
+                                                    alignItems: "center",
+                                                    justifyContent: "center"
+                                                }}
                                             >
-                                                <Typography noWrap color="inherit" style={{ fontSize: "12.8px", paddingTop: 4, paddingBottom: 6 }}
-
+                                                <Typography noWrap color="inherit" style={{
+                                                    fontSize: "11px",
+                                                    fontWeight: 600,
+                                                    fontFamily: "'JetBrains Mono', 'SF Mono', Menlo, monospace",
+                                                    padding: "2px 6px",
+                                                    minWidth: 58,
+                                                    maxWidth: 76,
+                                                    textAlign: "center",
+                                                    borderRadius: 6,
+                                                    background: isDarkMode() ? "rgba(15, 23, 42, 0.85)" : "rgba(226, 232, 240, 0.85)",
+                                                    border: isDarkMode() ? "1px solid rgba(255, 255, 255, 0.12)" : "1px solid rgba(15, 23, 42, 0.14)",
+                                                    color: isDarkMode() ? "#E2E8F0" : "#1E293B"
+                                                }}
                                                 >
                                                     {this.formatDisplayValue(control, value)}</Typography>
                                             </div>

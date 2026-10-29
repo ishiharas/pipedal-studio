@@ -337,7 +337,7 @@ const GxTunerControl =
                 let cy = NEEDLE_CY;
                 let path = new SvgPathBuilder().moveTo(r0*sin_+cx,r0*cos_+cy).lineTo(r1*sin_+cx,r1*cos_+cy).toString();
 
-                return (<path key={this.nextKey()} d={path} stroke={stroke} strokeWidth={width+""} />);
+                return (<path key={this.nextKey()} d={path} stroke={stroke} strokeWidth={width+""} strokeLinecap="round" />);
             }
 
             lastValidTime: number =  0;
@@ -402,7 +402,7 @@ const GxTunerControl =
 
 
                 return (
-                    <svg viewBox={bounds} width={DIAL_WIDTH} height={DIAL_HEIGHT} style={{position: "absolute"}} >
+                    <svg viewBox={bounds} width={DIAL_WIDTH} height={DIAL_HEIGHT} style={{position: "absolute", left: 0, top: 0, borderRadius: 20}} >
                         { content }
                     </svg>
                 )
@@ -412,12 +412,20 @@ const GxTunerControl =
 
             render() {
                 this.keyCounter = 0;
-                let textColor = isDarkMode() ? "#999": "#444";
-                return (<div ref={this.refRoot} style={{width: DIAL_WIDTH, height: DIAL_HEIGHT, fontSize: "2em", fontWeight: 700, position: "relative",
+                let textColor = isDarkMode() ? "#E2E8F0": "#444";
+                return (<div ref={this.refRoot} style={{
+                    width: DIAL_WIDTH,
+                    height: DIAL_HEIGHT,
+                    borderRadius: 20,
+                    overflow: "hidden",
+                    fontSize: "2em",
+                    fontWeight: 700,
+                    position: "relative",
+                    border: isDarkMode() ? "1px solid rgba(255, 255, 255, 0.12)" : "1px solid rgba(15, 23, 42, 0.15)",
                     boxShadow: isDarkMode() ? 
-                        "5px 5px 6px rgba(0,0,0,0.8) inset":
+                        "inset 0 4px 12px rgba(0,0,0,0.85), 0 4px 12px rgba(0,0,0,0.35)":
                         "1px 5px 6px #888 inset",
-                    background: isDarkMode()? "rgba(255,255,255,0.07)" : "",
+                    background: isDarkMode()? "linear-gradient(180deg, #181E2E 0%, #0E121C 100%)" : "",
                 
                      fontFamily: "arial,roboto,helvetica,sans"}}>
                          <div style={{position: "absolute", left: 0, bottom: 5, width: "50%",textAlign: "right"}}>

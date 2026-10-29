@@ -106,6 +106,148 @@ const theme = createTheme(
                 //         }
                 //     }
                 // },
+                MuiPaper: {
+                    styleOverrides: {
+                        root: {
+                            backgroundImage: 'none',
+                            backgroundColor: '#121723',
+                            color: '#F1F5F9',
+                        },
+                        rounded: {
+                            borderRadius: 14,
+                        }
+                    }
+                },
+                MuiBackdrop: {
+                    styleOverrides: {
+                        root: {
+                            backgroundColor: 'rgba(6, 9, 15, 0.72)',
+                            backdropFilter: 'blur(4px)',
+                        },
+                        invisible: {
+                            backgroundColor: 'transparent',
+                            backdropFilter: 'none',
+                        }
+                    }
+                },
+                MuiDialog: {
+                    styleOverrides: {
+                        paper: {
+                            backgroundImage: 'none',
+                            background: 'linear-gradient(180deg, #161C2C 0%, #0E121C 100%)',
+                            border: '1px solid rgba(255, 255, 255, 0.11)',
+                            boxShadow: '0 20px 50px rgba(0, 0, 0, 0.75)',
+                            borderRadius: 16,
+                        },
+                        paperFullScreen: {
+                            backgroundImage: 'none',
+                            background: 'linear-gradient(180deg, #131826 0%, #0B0D14 100%)',
+                            border: 'none',
+                            borderRadius: 0,
+                        }
+                    }
+                },
+                MuiDialogTitle: {
+                    styleOverrides: {
+                        root: {
+                            background: 'rgba(22, 28, 44, 0.92)',
+                            borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+                            fontWeight: 700,
+                            letterSpacing: '0.01em',
+                        }
+                    }
+                },
+                MuiDialogActions: {
+                    styleOverrides: {
+                        root: {
+                            borderTop: '1px solid rgba(255, 255, 255, 0.07)',
+                            padding: '10px 18px',
+                        }
+                    }
+                },
+                MuiDrawer: {
+                    styleOverrides: {
+                        paper: {
+                            backgroundImage: 'none',
+                            background: 'linear-gradient(180deg, #141A29 0%, #0C0F18 100%)',
+                            borderRight: '1px solid rgba(255, 255, 255, 0.10)',
+                            boxShadow: '12px 0 36px rgba(0, 0, 0, 0.65)',
+                        }
+                    }
+                },
+                MuiAppBar: {
+                    styleOverrides: {
+                        root: {
+                            backgroundImage: 'none',
+                            background: 'linear-gradient(180deg, #161C2C 0%, #0E121D 100%)',
+                            borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+                            color: '#F8FAFC',
+                            boxShadow: '0 4px 16px rgba(0, 0, 0, 0.45)',
+                        }
+                    }
+                },
+                MuiMenu: {
+                    styleOverrides: {
+                        paper: {
+                            backgroundImage: 'none',
+                            background: '#161C2B',
+                            border: '1px solid rgba(255, 255, 255, 0.12)',
+                            borderRadius: 12,
+                            boxShadow: '0 14px 36px rgba(0, 0, 0, 0.65)',
+                            padding: '4px',
+                        }
+                    }
+                },
+                MuiMenuItem: {
+                    styleOverrides: {
+                        root: {
+                            borderRadius: 8,
+                            margin: '2px 4px',
+                            fontSize: '0.88rem',
+                            fontWeight: 500,
+                            '&:hover': {
+                                backgroundColor: 'rgba(255, 255, 255, 0.07)',
+                            },
+                            '&.Mui-selected': {
+                                backgroundColor: 'rgba(0, 229, 255, 0.15)',
+                                color: '#00E5FF',
+                                fontWeight: 700,
+                                '&:hover': {
+                                    backgroundColor: 'rgba(0, 229, 255, 0.22)',
+                                },
+                            },
+                        }
+                    }
+                },
+                MuiListItemButton: {
+                    styleOverrides: {
+                        root: {
+                            borderRadius: 10,
+                            margin: '2px 10px',
+                            paddingTop: 8,
+                            paddingBottom: 8,
+                            transition: 'all 0.14s ease',
+                            '&:hover': {
+                                backgroundColor: 'rgba(255, 255, 255, 0.06)',
+                            },
+                            '&.Mui-selected': {
+                                backgroundColor: 'rgba(0, 229, 255, 0.14)',
+                                border: '1px solid rgba(0, 229, 255, 0.35)',
+                                color: '#F8FAFC',
+                                '&:hover': {
+                                    backgroundColor: 'rgba(0, 229, 255, 0.20)',
+                                },
+                            },
+                        }
+                    }
+                },
+                MuiDivider: {
+                    styleOverrides: {
+                        root: {
+                            borderColor: 'rgba(255, 255, 255, 0.08)',
+                        }
+                    }
+                },
                 MuiButton: {
                     styleOverrides: {
                         root: {
@@ -116,12 +258,14 @@ const theme = createTheme(
                         containedPrimary: {
                             borderRadius: '9999px',
                             paddingLeft: "16px", paddingRight: "16px",
-                            textTransform: "none"
+                            textTransform: "none",
+                            fontWeight: 700
                         },
                         containedSecondary: {
                             borderRadius: '9999px',
                             paddingLeft: "16px", paddingRight: "16px",
-                            textTransform: "none"
+                            textTransform: "none",
+                            fontWeight: 700
                         }
 
                     },
@@ -129,13 +273,19 @@ const theme = createTheme(
                         {
                             props: { variant: 'dialogPrimary' },
                             style: {
-                                color: "#FFFFFF"
+                                color: "#00E5FF",
+                                fontWeight: 700,
+                                textTransform: "none",
+                                borderRadius: 999
                             }
                         },
                         {
                             props: { variant: 'dialogSecondary', },
                             style: {
-                                color: "rgb(255,255,255,0.7)"
+                                color: "#94A3B8",
+                                fontWeight: 600,
+                                textTransform: "none",
+                                borderRadius: 999
                             },
                         },
                     ],
@@ -145,19 +295,23 @@ const theme = createTheme(
             palette: {
                 mode: 'dark',
                 primary: {
-                    main: '#A770E4'// #6750A4"   // #5B5690  #60529A  #5C5694
+                    main: '#00E5FF'
                 },
                 secondary: {
-                    main: "#FF6060"
+                    main: "#FF3864"
+                },
+                background: {
+                    default: "#0B0D13",
+                    paper: "#121723"
                 },
                 actionBar: {
-                    main: '#130b22ff',
-                    contrastText: '#FFFFFF'
+                    main: '#0B0E17',
+                    contrastText: '#F8FAFC'
                 }
 
             },
-            mainBackground: "#222",
-            toolbarColor: '#222'
+            mainBackground: "#0E121B",
+            toolbarColor: '#0E121B'
         }
         :
         {

@@ -148,6 +148,7 @@ const Draggable =
             startY: number = 0;
             startClientX: number = 0;
             startClientY: number = 0;
+            parentScale: number = 1.0;
             dragStarted: boolean = false;
             savedIndex: string = "";
             savedOpacity: string = "";
@@ -158,6 +159,9 @@ const Draggable =
 
             onPointerDownCapture(e: any) {
                 // a new pointer down of any type cancels capture
+                if (this.dragStarted && this.props.onDragCancel) {
+                    this.props.onDragCancel(this.lastX, this.lastY);
+                }
                 this.cancelDrag();
                 e.preventDefault();
                 e.stopPropagation();
@@ -232,6 +236,16 @@ const Draggable =
                     this.longPressTimer = setTimeout(() => this.longPressTimerTick(), LONG_PRESS_TIME_MS);
 
                     this.dragTarget = e.currentTarget as HTMLDivElement;
+                    let unscaledWidth = this.dragTarget.offsetWidth;
+                    if (unscaledWidth > 0) {
+                        let rectWidth = this.dragTarget.getBoundingClientRect().width;
+                        this.parentScale = rectWidth / unscaledWidth;
+                        if (!this.parentScale || this.parentScale <= 0.1) {
+                            this.parentScale = 1.0;
+                        }
+                    } else {
+                        this.parentScale = 1.0;
+                    }
                     document.body.addEventListener("pointerdown", this.onPointerDownCapture, true);
                     this.captureElement = e.currentTarget;
                     // e.currentTarget.setPointerCapture(e.pointerId);
@@ -330,29 +344,10 @@ const Draggable =
 
 
             makeTransform(targetElement: HTMLElement, clientX: number, clientY: number): string {
-                let scrollContainer = this.getScrollContainer();
-                if (scrollContainer && this.originalBounds) {
-                    // the bounds of the translated element must COMPLETELY fit within the scroll range of the container.
-                    let newLocation = new DOMRect(
-                        this.originalBounds.x + clientX - this.startX,
-                        this.originalBounds.y + clientY - this.startY,
-                        this.originalBounds.width,
-                        this.originalBounds.height);
-
-
-                    if (newLocation.x < 0) {
-                        clientX -= newLocation.x;
-                    } else if (newLocation.right >= scrollContainer.scrollWidth) {
-                        clientX -= newLocation.right - scrollContainer.scrollWidth;
-                    }
-                    if (newLocation.top < 0) {
-                        clientY -= newLocation.top;
-                    } else if (newLocation.bottom > scrollContainer.scrollHeight) {
-                        clientY -= newLocation.bottom - scrollContainer.scrollHeight;
-                    }
-
-                }
-                return "translate(" + (clientX - this.startX) + "px," + (clientY - this.startY) + "px) scale(" + SELECT_SCALE + ")";
+                let scale = this.parentScale > 0.1 ? this.parentScale : 1.0;
+                let dx = (clientX - this.startX) / scale;
+                let dy = (clientY - this.startY) / scale;
+                return "translate(" + dx + "px," + dy + "px) scale(" + SELECT_SCALE + ")";
 
             }
 

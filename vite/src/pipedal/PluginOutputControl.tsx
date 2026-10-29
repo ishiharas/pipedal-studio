@@ -117,11 +117,11 @@ const styles = (theme: Theme) => createStyles({
         // zIndex: -1,
     }),
     controlFrame: css({
-        display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "space-between", height: 116
+        display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "space-between", height: 128
     }),
 
     titleSection: css({
-        flex: "0 0 auto", alignSelf: "stretch", marginBottom: 8, marginLeft: 0, marginRight: 0
+        flex: "0 0 auto", alignSelf: "stretch", marginBottom: 6, marginLeft: 0, marginRight: 0
     }),
 
     midSection: css({
@@ -129,10 +129,10 @@ const styles = (theme: Theme) => createStyles({
     }),
 
     editSection: css({
-        flex: "0 0 28", position: "relative", width: 60, height: 28, minHeight: 28
+        flex: "0 0 30px", position: "relative", width: 60, height: 30, minHeight: 30
     }),
     editSectionNoContent: css({
-        flex: "0 0 28", position: "relative", width: 1, height: 28, minHeight: 28
+        flex: "0 0 30px", position: "relative", width: 1, height: 30, minHeight: 30
     })
 
 });
@@ -220,6 +220,11 @@ const PluginOutputControl =
             private dbVuHoldTime = 0.0;
 
             private lastDbText = "";
+            private lastDbMarginTop: number = 0;
+            private lastTelltaleMarginTop: number = 100;
+            private lastTelltaleColor: string = "#C00";
+            private lastProgressWidth: number = 36;
+            private lastVuMarginTop: number = 0;
 
             private requestDbVuAnimation() {
                 if (!this.animationHandle) {
@@ -234,6 +239,7 @@ const PluginOutputControl =
                                 this.dbVuTelltale = value;
                                 this.dbVuHoldTime = Date.now() + 2000;
                             }
+                            this.lastDbMarginTop = top;
                             if (this.dbVuRef.current) {
                                 this.dbVuRef.current.style.marginTop = top + "px";
                             }
@@ -283,9 +289,11 @@ const PluginOutputControl =
                     let y = this.dbVuMap(this.dbVuTelltale);
                     if (y < 0) y = 0;
 
+                    let telltaleColor = getVuColor(defaultVuColors, this.dbVuTelltale);
+                    this.lastTelltaleMarginTop = y;
+                    this.lastTelltaleColor = telltaleColor;
                     if (this.dbVuTelltaleRef.current) {
                         let telltaleStyle = this.dbVuTelltaleRef.current.style;
-                        let telltaleColor = getVuColor(defaultVuColors, this.dbVuTelltale);
                         telltaleStyle.marginTop = y + "px";
                         telltaleStyle.background = telltaleColor;
                     }
@@ -294,7 +302,10 @@ const PluginOutputControl =
                     this.requestDbVuAnimation();
                 }
             }
+            private lastValue: number = 0;
+
             private updateValue(value: number) {
+                this.lastValue = value;
                 if (this.lampRef.current) {
                     let control = this.props.uiControl;
                     let range = (value - control.min_value) / (control.max_value - control.min_value);
@@ -306,6 +317,7 @@ const PluginOutputControl =
                     let control = this.props.uiControl;
                     let range = (value - control.min_value) / (control.max_value - control.min_value);
                     let w = this.PROGRESS_WIDTH * range;
+                    this.lastProgressWidth = w;
 
                     if (!this.animationHandle) {
                         this.animationHandle = requestAnimationFrame(
@@ -323,6 +335,7 @@ const PluginOutputControl =
                     let control = this.props.uiControl;
                     let range = (value - control.min_value) / (control.max_value - control.min_value);
                     let top = this.VU_HEIGHT - range * this.VU_HEIGHT;
+                    this.lastVuMarginTop = top;
 
                     if (!this.animationHandle) {
                         this.animationHandle = requestAnimationFrame(
@@ -424,7 +437,7 @@ const PluginOutputControl =
                 if (control.isTuner()) {
                     item_width = undefined;
                     return (
-                        <div style={{ display: "flex", flexDirection: "column", width: item_width, margin: 8, height: 98 }}>
+                        <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", width: item_width, margin: 8, height: 116 }}>
                             <GxTunerControl instanceId={this.props.instanceId} symbolName={control.symbol}
                                 valueIsMidi={control.units === Units.midiNote}
                             />
@@ -455,7 +468,7 @@ const PluginOutputControl =
                                         height: 8, width: this.PROGRESS_WIDTH, overflow: "hidden", position: "absolute",
                                         margin: "1px 1px 1px 1px", background: "#282828"
                                     }}>
-                                        <div ref={this.progressRef} style={{ height: 10, width: this.PROGRESS_WIDTH, position: "absolute", marginTop: 0, background: "#0C0" }} />
+                                        <div ref={this.progressRef} style={{ height: 10, width: this.lastProgressWidth, position: "absolute", marginTop: 0, background: "#0C0" }} />
                                         <div style={{
                                             height: 10, width: this.PROGRESS_WIDTH, position: "absolute",
                                             boxShadow: "inset 0px 2px 4px #000D", background: "transparent"
@@ -489,12 +502,20 @@ const PluginOutputControl =
                             {/* CONTROL SECTION */}
 
                             <div className={classes.midSection}
-                                style={{ flex: "1 1 1", display: "flex", justifyContent: "center", alignItems: "start", flexFlow: "row nowrap" }}>
+                                style={{ flex: "1 1 1", display: "flex", justifyContent: "center", alignItems: "center", flexFlow: "row nowrap" }}>
                                 <ControlTooltip uiControl={control}>
 
-                                    <div style={{ width: 8, height: this.DB_VU_HEIGHT + 4, background: "#000", }}>
-                                        <div style={{ height: this.DB_VU_HEIGHT, width: 4, overflow: "hidden", position: "absolute", margin: 2 }}>
-                                            <div style={{ width: 4, height: this.DB_VU_HEIGHT, position: "absolute", left: 0, top: 0 }}>
+                                    <div style={{
+                                        width: 10,
+                                        height: this.DB_VU_HEIGHT + 4,
+                                        background: "#0B0E17",
+                                        borderRadius: 999,
+                                        border: "1px solid rgba(255, 255, 255, 0.14)",
+                                        overflow: "hidden",
+                                        position: "relative"
+                                    }}>
+                                        <div style={{ height: this.DB_VU_HEIGHT, width: 6, overflow: "hidden", position: "absolute", left: 1, top: 1, borderRadius: 999 }}>
+                                            <div style={{ width: 6, height: this.DB_VU_HEIGHT, position: "absolute", left: 0, top: 0 }}>
                                                 {
                                                     vuColors.map((vuColor, ix) => {
                                                         let top = Math.floor(this.dbVuMap(vuColor.maxDb));
@@ -503,7 +524,7 @@ const PluginOutputControl =
                                                         return (
                                                             <div key={ix}
                                                                 style={{
-                                                                    position: "absolute", width: 4, height: (bottom - top),
+                                                                    position: "absolute", width: 6, height: (bottom - top),
                                                                     top: top, left: 0, background: vuColor.color
                                                                 }} />
                                                         );
@@ -512,9 +533,9 @@ const PluginOutputControl =
                                             </div>
 
                                             <div ref={this.dbVuRef} style={{
-                                                width: 4, position: "absolute", marginTop: 0, height: this.VU_HEIGHT, background: "#000"
+                                                width: 6, position: "absolute", marginTop: this.lastDbMarginTop, height: this.VU_HEIGHT, background: "#0B0E17"
                                             }} />
-                                            <div ref={this.dbVuTelltaleRef} style={{ width: 4, position: "absolute", marginTop: 100, height: 3, background: "#C00" }} />
+                                            <div ref={this.dbVuTelltaleRef} style={{ width: 6, position: "absolute", marginTop: this.lastTelltaleMarginTop, height: 3, borderRadius: 2, background: this.lastTelltaleColor }} />
                                         </div>
                                     </div>
                                 </ControlTooltip>
@@ -524,7 +545,7 @@ const PluginOutputControl =
                                 <Typography ref={this.dbVuTextRef} variant="caption" display="block" style={{
                                     width: "100%", opacity: 0.6,
                                     textAlign: "center"
-                                }}> </Typography>
+                                }}>{this.lastDbText || " "}</Typography>
                             </div>
 
                         </div >
@@ -552,7 +573,7 @@ const PluginOutputControl =
                                 <ControlTooltip uiControl={control}>
                                     <div style={{ width: 8, height: this.VU_HEIGHT + 4, background: "#000", }}>
                                         <div style={{ height: this.VU_HEIGHT, overflow: "hidden", position: "absolute", margin: 2 }}>
-                                            <div ref={this.vuRef} style={{ width: 4, height: this.VU_HEIGHT, background: "#0C0", }} />
+                                            <div ref={this.vuRef} style={{ width: 4, height: this.VU_HEIGHT, marginTop: this.lastVuMarginTop, background: "#0C0", }} />
                                         </div>
                                     </div>
                                 </ControlTooltip>
@@ -603,7 +624,8 @@ const PluginOutputControl =
                                     <div ref={this.lampRef} style={{
                                         width: 8, height: 8,
                                         background: ledGradient,
-                                        opacity: 0, borderRadius: 3, margin: 2, position: "absolute"
+                                        opacity: (this.lastValue - control.min_value) / (control.max_value - control.min_value),
+                                        borderRadius: 3, margin: 2, position: "absolute"
                                     }} />
                                 </div>
 

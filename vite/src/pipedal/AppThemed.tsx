@@ -812,25 +812,70 @@ export
 
                         {(!this.state.tinyToolBar) && !this.state.performanceView ?
                             (
-                                <AppBar position="absolute"  >
+                                <AppBar position="absolute" style={{
+                                    background: isDarkMode()
+                                        ? "linear-gradient(180deg, #161C2C 0%, #0E121D 100%)"
+                                        : undefined,
+                                    borderBottom: isDarkMode() ? "1px solid rgba(255, 255, 255, 0.08)" : undefined,
+                                    boxShadow: isDarkMode() ? "0 4px 16px rgba(0, 0, 0, 0.45)" : undefined
+                                }} >
                                     <Toolbar variant="dense" className={classes.toolBar} style={{ overflow: "clip" }}  >
-                                        <IconButtonEx tooltip="Menu"
+                                        <IconButtonEx tooltip="Menu & Banks"
                                             edge="start"
                                             aria-label="menu"
                                             color="inherit"
                                             onClick={() => { this.showDrawer() }}
                                             size="large">
-                                            <MenuButton style={{ opacity: 0.75 }} />
+                                            <MenuButton style={{ opacity: 0.85 }} />
                                         </IconButtonEx>
-                                        <div style={{ flex: "0 1 400px", minWidth: 100 }}>
+                                        <div
+                                            onClick={() => { this.showDrawer(); }}
+                                            title="Open Rigs & Banks Browser"
+                                            style={{
+                                                display: "flex",
+                                                alignItems: "center",
+                                                gap: 7,
+                                                padding: "4px 11px",
+                                                borderRadius: 999,
+                                                background: isDarkMode() ? "rgba(0, 229, 255, 0.1)" : "rgba(255, 255, 255, 0.18)",
+                                                border: isDarkMode() ? "1px solid rgba(0, 229, 255, 0.3)" : "1px solid rgba(255, 255, 255, 0.3)",
+                                                marginRight: 6,
+                                                flex: "0 0 auto",
+                                                cursor: "pointer"
+                                            }}
+                                        >
+                                            <span style={{
+                                                width: 7,
+                                                height: 7,
+                                                borderRadius: "50%",
+                                                background: "#00E5FF",
+                                                boxShadow: "0 0 8px #00E5FF"
+                                            }} />
+                                            <span style={{
+                                                fontSize: "10.5px",
+                                                fontWeight: 800,
+                                                letterSpacing: "0.08em",
+                                                color: "#F8FAFC"
+                                            }}>
+                                                {this.state.banks.getSelectedEntryName()
+                                                    ? `BANK: ${this.state.banks.getSelectedEntryName().toUpperCase()}`
+                                                    : "STUDIO"}
+                                            </span>
+                                        </div>
+                                        <div style={{ flex: "0 1 460px", minWidth: 120, marginLeft: "auto", marginRight: "auto" }}>
                                             <PresetSelector />
                                         </div>
-                                        <div style={{ flex: "2 2 30px" }} />
+                                        <div style={{ flex: "1 1 16px" }} />
+                                        {this.state.showStatusMonitor && (
+                                            <div style={{ flex: "0 0 auto", marginRight: 6 }}>
+                                                <JackStatusView inlineHeader={true} />
+                                            </div>
+                                        )}
                                         {this.state.canFullScreen &&
                                             <IconButtonEx
                                                 aria-label="maximise/minimise"
                                                 tooltip={this.state.isFullScreen ? "Exit full screen" : "Full screen"}
-                                                style={{ marginRight: 8, marginLeft: 8 }}
+                                                style={{ marginRight: 8, marginLeft: 4 }}
                                                 onClick={() => { this.toggleFullScreen(); }}
                                                 color="inherit"
                                                 size="large">
@@ -1068,7 +1113,7 @@ export
                         {(this.state.updateDialogOpen) && (
                             <UpdateDialog open={this.state.updateDialogOpen} />
                         )}
-                        {this.state.showStatusMonitor && (
+                        {this.state.showStatusMonitor && this.state.tinyToolBar && (
                             <JackStatusView />
                         )}
 

@@ -25,7 +25,7 @@ import JackHostStatus from './JackHostStatus';
 
 
 interface JackStatusViewProps {
-
+    inlineHeader?: boolean;
 };
 
 interface JackStatusViewState {
@@ -66,6 +66,7 @@ export default class JackStatusView extends React.Component<JackStatusViewProps,
 
     timerHandle?: number;
     componentDidMount() {
+        this.tick();
         this.timerHandle = setInterval(this.tick, 1000);
     }
     componentWillUnmount() {
@@ -76,13 +77,69 @@ export default class JackStatusView extends React.Component<JackStatusViewProps,
     }
 
     render() {
+        const status = this.state.jackStatus;
+        const cpu = status ? Math.min(100, Math.max(0, status.cpuUsage)) : 0;
+        const barColor = cpu > 80 ? "#EF4444" : (cpu > 55 ? "#F59E0B" : "#00E5FF");
+
+        const meterPill = (
+            <div style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                padding: "4px 12px",
+                borderRadius: 999,
+                background: "rgba(11, 14, 22, 0.85)",
+                border: "1px solid rgba(255, 255, 255, 0.10)",
+                boxShadow: "inset 0 1px 2px rgba(0, 0, 0, 0.6)",
+                whiteSpace: "nowrap",
+                fontSize: 11,
+                fontWeight: 700,
+                letterSpacing: "0.03em",
+                fontFamily: "'JetBrains Mono', 'SF Mono', Menlo, monospace"
+            }}>
+                {status && status.active && !status.restarting && (
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        <span style={{ fontSize: 10, fontWeight: 800, color: "#94A3B8" }}>DSP</span>
+                        <div style={{
+                            width: 54,
+                            height: 6,
+                            borderRadius: 999,
+                            background: "rgba(255, 255, 255, 0.10)",
+                            overflow: "hidden"
+                        }}>
+                            <div style={{
+                                width: `${cpu}%`,
+                                height: "100%",
+                                borderRadius: 999,
+                                background: barColor,
+                                boxShadow: `0 0 8px ${barColor}`,
+                                transition: "width 0.3s ease"
+                            }} />
+                        </div>
+                    </div>
+                )}
+                {JackHostStatus.getDisplayView("", status)}
+            </div>
+        );
+
+        if (this.props.inlineHeader) {
+            return meterPill;
+        }
+
         return (
             <div style={{
-                position: "absolute", right: 30, bottom: 2,left: 30, height: 30, 
-                paddingRight: 20, paddingBottom: 6,
-                textAlign: "center", opacity: 0.7, whiteSpace: "nowrap", fontSize: 12, zIndex: 10, fontWeight: 900
+                position: "absolute",
+                right: 30,
+                bottom: 8,
+                left: 30,
+                height: 28,
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                pointerEvents: "none",
+                zIndex: 10
             }}>
-                {JackHostStatus.getDisplayView("",this.state.jackStatus) }
+                {meterPill}
             </div>
         );
 

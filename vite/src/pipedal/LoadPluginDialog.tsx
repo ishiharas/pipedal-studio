@@ -27,7 +27,7 @@ import Button from '@mui/material/Button';
 import MenuItem from '@mui/material/MenuItem';
 import Typography from '@mui/material/Typography';
 import PluginInfoDialog from './PluginInfoDialog'
-import PluginIcon from './PluginIcon'
+import PluginIcon, { getPluginCategoryInfo } from './PluginIcon'
 import DialogEx from './DialogEx';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
@@ -108,7 +108,7 @@ const pluginGridStyles = (theme: Theme) => createStyles({
     content: css({
         marginTop: "4px",
         marginBottom: "4px",
-        marginLeft: "8px",
+        marginLeft: "10px",
         marginRight: "8px",
         width: "100%",
         overflow: "hidden",
@@ -117,16 +117,18 @@ const pluginGridStyles = (theme: Theme) => createStyles({
         flexDirection: "row",
         justifyContent: "flex-start",
         height: 48,
-        alignItems: "start",
+        alignItems: "center",
         flexWrap: "nowrap"
     }),
     content2: css({
-        display: "flex", flexDirection: "column", flex: "1 1 auto", width: "100%",
-        paddingLeft: 12, whiteSpace: "nowrap", textOverflow: "ellipsis"
+        display: "flex", flexDirection: "column", flex: "1 1 auto", minWidth: 0, width: "100%",
+        paddingLeft: 12, overflow: "hidden"
 
     }),
     favoriteDecoration: css({
-        flex: "0 0 auto"
+        flex: "0 0 auto",
+        display: "flex",
+        alignItems: "center"
     }),
     table: css({
         borderCollapse: "collapse",
@@ -533,9 +535,9 @@ export const LoadPluginDialog =
                             if (filterType === PluginType.Plugin || rootClass.is_type_of(filterType, plugin.plugin_type)) {
                                 let score: number = 0;
                                 if (plugin.is_vst3) {
-                                    score = searchFilter.score(plugin.name, plugin.plugin_display_type, plugin.author_name, "vst3");
+                                    score = searchFilter.score(plugin.name, plugin.plugin_display_type, plugin.author_name, plugin.description ?? "", "vst3");
                                 } else {
-                                    score = searchFilter.score(plugin.name, plugin.plugin_display_type, plugin.author_name);
+                                    score = searchFilter.score(plugin.name, plugin.plugin_display_type, plugin.author_name, plugin.description ?? "");
                                 }
 
                                 if (score !== 0) {
@@ -635,6 +637,30 @@ export const LoadPluginDialog =
                     2000);
 
             }
+            getPluginShortDescription(plugin: UiPlugin): string {
+                if (plugin.description && plugin.description.trim() !== "") {
+                    let clean = plugin.description
+                        .replace(/#+\s+/g, "")
+                        .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+                        .replace(/[*_`~]/g, "")
+                        .replace(/\s+/g, " ")
+                        .trim();
+                    if (clean.length > 0) {
+                        return clean;
+                    }
+                }
+                let inputControls = plugin.controls
+                    ? plugin.controls.filter((c) => c.is_input && !c.not_on_gui && !c.is_bypass).map((c) => c.name)
+                    : [];
+                if (inputControls.length > 0) {
+                    return "Controls: " + inputControls.slice(0, 5).join(", ") + (inputControls.length > 5 ? "…" : "");
+                }
+                if (plugin.author_name) {
+                    return `${plugin.plugin_display_type || "Audio Plugin"} by ${plugin.author_name}`;
+                }
+                return plugin.plugin_display_type || "LV2 Audio Effect";
+            }
+
             renderItem(gridItems: UiPlugin[], row: number, column: number): React.ReactNode {
                 let item: number = (row) * this.gridColumnCount + (column);
                 if (item >= gridItems.length) {
@@ -648,41 +674,65 @@ export const LoadPluginDialog =
                 if (value.uri === "http://two-play.com/plugins/toob-nam") {
                     pluginType = PluginType.NamPlugin;
                 }
+                let catInfo = getPluginCategoryInfo(pluginType, "", value.uri);
                 return (
                     <div key={value.uri}
                         onDoubleClick={(e) => { this.onDoubleClick(e, value.uri) }}
                         onClick={(e) => { this.onClick(e, value.uri) }}
                         onMouseEnter={(e) => { this.handleMouseEnter(e, value.uri) }}
                         onMouseLeave={(e) => { this.handleMouseLeave(e, value.uri) }}
+                        style={{ padding: "3px 5px" }}
                     >
-                        <ButtonBase className={classes.buttonBase} >
+                        <ButtonBase className={classes.buttonBase} style={{ borderRadius: 10 }} component="div">
                             <SelectHoverBackground selected={value.uri === this.state.selected_uri} showHover={true} />
                             <div className={classes.content}>
-                                <div className={classes.iconBorder} >
-                                    <PluginIcon pluginType={pluginType} size={24} opacity={0.6} />
+                                <div className={classes.iconBorder} style={{ paddingTop: 0, display: "flex", alignItems: "center" }} >
+                                    <PluginIcon pluginType={pluginType} size={24} color={catInfo.color} opacity={0.95} />
                                 </div>
                                 <div className={classes.content2}>
-                                    <div className={classes.label} style={{ display: "flex", flexFlow: "row nowrap", alignItems: "center" }} >
+                                    <div className={classes.label} style={{ display: "flex", flexFlow: "row nowrap", alignItems: "center", gap: 6 }} >
 
-                                        <Typography color="textPrimary" noWrap sx={{ display: "block", flex: "0 1 auto", }} >
+                                        <Typography color="textPrimary" noWrap sx={{ display: "block", flex: "0 1 auto", fontWeight: 600, fontSize: "0.9rem", lineHeight: 1.25 }} >
                                             {value.name}
                                         </Typography>
                                         {
                                             isFavorite && (
                                                 <div style={{ flex: "0 0 auto" }}>
-                                                    <StarIcon sx={{ color: "#C80", fontSize: 16, marginRight: "2px" }} />
+                                                    <StarIcon sx={{ color: "#F59E0B", fontSize: 16, marginRight: "2px" }} />
                                                 </div>
                                             )
                                         }
 
                                     </div>
-                                    <Typography color="textSecondary" noWrap>
-                                        {value.plugin_display_type} {this.stereo_indicator(value)}
-
-                                    </Typography>
+                                    <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 2 }}>
+                                        <span style={{
+                                            fontSize: "9px",
+                                            fontWeight: 800,
+                                            letterSpacing: "0.06em",
+                                            padding: "0.5px 5.5px",
+                                            borderRadius: 4,
+                                            background: `${catInfo.color}22`,
+                                            color: catInfo.color,
+                                            border: `1px solid ${catInfo.color}44`,
+                                            flexShrink: 0
+                                        }}>
+                                            {catInfo.badge}
+                                        </span>
+                                        <Typography color="textSecondary" variant="caption" noWrap sx={{ fontSize: "0.72rem" }}>
+                                            {value.plugin_display_type}{this.stereo_indicator(value)}{value.author_name ? ` • ${value.author_name}` : ""}
+                                        </Typography>
+                                    </div>
                                 </div>
-                                <div className={classes.favoriteDecoration}>
-
+                                <div
+                                    className={classes.favoriteDecoration}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                    }}
+                                    onDoubleClick={(e) => {
+                                        e.stopPropagation();
+                                    }}
+                                >
+                                    <PluginInfoDialog plugin_uri={value.uri} />
                                 </div>
                             </div>
                         </ButtonBase>

@@ -32,7 +32,7 @@ import {isDarkMode} from './DarkMode';
 const drawerStyles = (theme: Theme) => {
     return createStyles({
     list: {
-        width: 250,
+        width: 276,
     },
     fullList: {
         width: 'auto',
@@ -98,13 +98,48 @@ export const TemporaryDrawer = withStyles(
                                 onClick={() => { this.fireClose(); }}
                                 onKeyDown={() => { this.fireClose(); }}
                             >
-                                <div style={{ display: "flex", flexFlow: "row nowrap", justifyContent: "flex-start", alignItems: "center", width: "100%"}}>
+                                <div style={{
+                                    display: "flex",
+                                    flexFlow: "row nowrap",
+                                    justifyContent: "flex-start",
+                                    alignItems: "center",
+                                    width: "100%",
+                                    height: 54,
+                                    paddingLeft: 8,
+                                    paddingRight: 16,
+                                    borderBottom: isDarkMode() ? "1px solid rgba(255, 255, 255, 0.08)" : "1px solid rgba(15, 23, 42, 0.08)",
+                                    background: isDarkMode() ? "rgba(22, 28, 44, 0.75)" : "#F8FAFC"
+                                }}>
 
                                     <IconButtonEx tooltip="Back"
-                                         style={{ flex: "0 0 auto" }} >
-                                        <ArrowBackIcon style={{ fill: '#666' }} />
+                                         style={{ flex: "0 0 auto", marginRight: 6 }} >
+                                        <ArrowBackIcon style={{ fill: isDarkMode() ? '#E2E8F0' : '#334155' }} />
                                     </IconButtonEx>
-                                    <img src="img/Pi-Logo-3.png" alt="" style={{height: 36}} />
+                                    <div style={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: 8,
+                                        padding: "4px 12px",
+                                        borderRadius: 999,
+                                        background: isDarkMode() ? "rgba(0, 229, 255, 0.1)" : "rgba(2, 132, 199, 0.1)",
+                                        border: isDarkMode() ? "1px solid rgba(0, 229, 255, 0.3)" : "1px solid rgba(2, 132, 199, 0.3)"
+                                    }}>
+                                        <span style={{
+                                            width: 8,
+                                            height: 8,
+                                            borderRadius: "50%",
+                                            background: "#00E5FF",
+                                            boxShadow: "0 0 8px #00E5FF"
+                                        }} />
+                                        <span style={{
+                                            fontSize: "12px",
+                                            fontWeight: 800,
+                                            letterSpacing: "0.08em",
+                                            color: isDarkMode() ? "#F8FAFC" : "#0F172A"
+                                        }}>
+                                            PIPEDAL STUDIO
+                                        </span>
+                                    </div>
                                 </div>
                                 {this.props.children}
                             </div>

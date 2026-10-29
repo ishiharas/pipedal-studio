@@ -166,10 +166,10 @@ const ToobParametricEqView =
             absolutePosition(x: number, y: number, el: React.ReactNode) {
                 return (<div style={{ position: "absolute", left: x, top: y }}>{el}</div>);
             }
-            private ROW_HEIGHT = 140;
-            private BORDER_HEIGHT = 350;
-            private DIAL_WIDTH = 63;
-            private GRAPH_WIDTH = this.DIAL_WIDTH * 2;
+            private ROW_HEIGHT = 144;
+            private BORDER_HEIGHT = 368;
+            private DIAL_WIDTH = 80;
+            private GRAPH_WIDTH = 146;
 
             private smoothPath(pt0: Point, pt1: Point, pt2: Point, pt3: Point, curveRadius: number): string {
                 let pathBuilder = new SvgPathBuilder();
@@ -203,16 +203,18 @@ const ToobParametricEqView =
             }
             horizontalCompactControls(host: ICustomizationHost, controls: UnpackedControls) {
                 let height = this.BORDER_HEIGHT;
-                let row0 = height / 2 - this.ROW_HEIGHT;
+                let row0 = height / 2 - this.ROW_HEIGHT - 2;
                 let row1 = row0 + this.ROW_HEIGHT;
 
                 let borderTop = 0;
-                let borderBottom = height - 8;
+                let borderBottom = height - 4;
 
-                let labelTop = row0 - 30;
-                let labelBottom = row1 + this.ROW_HEIGHT - 5;
+                let labelTop = row0 - 26;
+                let labelBottom = row1 + this.ROW_HEIGHT - 8;
 
-                let colPos = (group: number, col: number) => this.DIAL_WIDTH * (0.3 * group + col);
+                const PAD_X = 12;
+                let colPos = (group: number, col: number) => PAD_X + this.DIAL_WIDTH * (0.32 * group + col);
+                let divPos = (group: number, col: number) => colPos(group, col) - this.DIAL_WIDTH * 0.14;
                 let cpos0 = (group: number, col: number, el: React.ReactNode) => this.absolutePosition(colPos(group, col), row0, el);
                 let cpos1 = (group: number, col: number, el: React.ReactNode) => this.absolutePosition(colPos(group, col) + this.DIAL_WIDTH / 2, row1, el);
 
@@ -222,25 +224,25 @@ const ToobParametricEqView =
                     let right = colPos(group, col1);
                     return (
                         <Typography variant="body1" noWrap style={{
-                            fontSize: "0.85em", fontWeight: 700,
+                            fontSize: "0.78em", fontWeight: 800, letterSpacing: "0.06em", textTransform: "uppercase",
                             top: y, paddingLeft: 0, paddingRight: 0,
-                            position: "absolute", left: left + 8, width: right - left,
-                            opacity: 0.4, textAlign: align
+                            position: "absolute", left: left, width: right - left,
+                            opacity: 0.55, textAlign: align
                         }}>{text}</Typography>
                     );
                 };
                 let divider = (group: number, col0: number, y0: number, col1: number, y1: number) => {
-                    let x0 = colPos(group, col0);
-                    let x1 = colPos(group, col1);
+                    let x0 = divPos(group, col0);
+                    let x1 = divPos(group, col1);
                     return (
                         <svg width={x1 - x0 + 4} height={y1 - y0 + 4} style={{ position: "absolute", left: x0 - 2, top: y0 - 2 }}>
-                            <line x1={2} y1={2} x2={2 + x1 - x0} y2={2 + y1 - y0} stroke="#888" strokeWidth={4} />
+                            <line x1={2} y1={2} x2={2 + x1 - x0} y2={2 + y1 - y0} stroke="rgba(255, 255, 255, 0.16)" strokeWidth={2} />
                         </svg>
                     );
                 };
                 let leftDivider = (group: number, col0: number, y0: number, col1: number, y1: number) => {
-                    let x0 = colPos(group, col0);
-                    let x1 = colPos(group, col1);
+                    let x0 = divPos(group, col0);
+                    let x1 = divPos(group, col1);
                     let xOrg = Math.min(x0, x1) - 2;
                     let yOrg = Math.min(y0, y1) - 2;
                     let width = Math.abs(x1 - x0) + 4;
@@ -258,7 +260,7 @@ const ToobParametricEqView =
                         <svg width={width} height={height} style={{ position: "absolute", left: xOrg - 1, top: yOrg }}
                             viewBox={`${xOrg} ${yOrg} ${width} ${height}`}
                         >
-                            <path d={path} fill="none" stroke="#888" strokeWidth="4px" />
+                            <path d={path} fill="none" stroke="rgba(255, 255, 255, 0.16)" strokeWidth="2px" />
                         </svg>
                     );
                 };
@@ -268,15 +270,23 @@ const ToobParametricEqView =
                         instanceId={this.props.instanceId} />
                 );
 
-                return [(<div style={{
-                    width: "100%", height: "100%",
+                return [(<div key="tpq_hc" style={{
+                    width: "100%", minHeight: "100%",
+                    paddingTop: 12, paddingBottom: 24, boxSizing: "border-box",
                     position: "relative", display: "flex", flexFlow: "column nowrap",
-                    alignItems: "center", justifyContent: "center"
+                    alignItems: "stretch", justifyContent: "flex-start"
                 }}>
                     <div style={{ flex: "1 1 0px", }} />
                     <div style={{
-                        flex: "0 0 auto", border: "4px #888 solid", borderRadius: "8px 8px 8px 8px", position: "relative",
-                        width: colPos(6, 8.5), height: height,
+                        flex: "0 0 auto",
+                        marginLeft: "auto",
+                        marginRight: "auto",
+                        border: "2px rgba(255, 255, 255, 0.16) solid",
+                        background: "rgba(255, 255, 255, 0.02)",
+                        borderRadius: "14px",
+                        position: "relative",
+                        width: colPos(6, 8.5) + PAD_X,
+                        height: height,
                     }}>
                         {label1(labelBottom, 1, 2, 3.0, "Lo Shelf", "center")}
                         {label1(labelTop, 2, 3, 5, "Low Mid", "center")}
@@ -288,7 +298,7 @@ const ToobParametricEqView =
                         {leftDivider(3, 5.0, borderTop, 4.5, borderBottom)}
                         {leftDivider(4, 6.5, borderTop, 6.5, borderBottom)}
 
-                        {this.absolutePosition(0, row0, graph)}
+                        {this.absolutePosition(PAD_X - 2, row0 + 6, graph)}
                         {this.absolutePosition(colPos(0, 0), row1, controls.filters_loCut)}
                         {this.absolutePosition(colPos(0, 1), row1, controls.filters_hiCut)}
 
@@ -354,13 +364,15 @@ const ToobParametricEqView =
                 }
 
                 return [(<div key="tpq_cv" style={{
-                    width: "100%", height: "100%",
+                    width: "100%", minHeight: "100%",
+                    paddingTop: 12, paddingBottom: 24, boxSizing: "border-box",
                     position: "relative", display: "flex", flexFlow: "column nowrap",
-                    alignItems: "center", justifyContent: "center"
+                    alignItems: "stretch", justifyContent: "flex-start"
                 }}>
                     <div style={{ flex: "1 1 0px" }} />
                     <div style={{
                         display: "flex", flexFlow: "row wrap", alignItems: "center", width: width, justifyContent: "space-between",
+                        marginLeft: "auto", marginRight: "auto",
                         flex: "0 0 auto", border: "4px #888 solid", borderRadius: "8px 8px 8px 8px", position: "relative",
                     }}>
 

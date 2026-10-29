@@ -29,8 +29,7 @@ import { Theme } from '@mui/material/styles';
 import { PiPedalModel, PiPedalModelFactory } from './PiPedalModel';
 import { PluginType } from './Lv2Plugin';
 import ButtonBase from '@mui/material/ButtonBase';
-import Typography from '@mui/material/Typography';
-import PluginIcon, { getIconColor, SelectIconUri } from './PluginIcon';
+import PluginIcon, { getIconColor, getPluginCategoryInfo, renderHardwareIllustration, SelectIconUri } from './PluginIcon';
 import { SelectHoverBackground } from './SelectHoverBackground';
 import SvgPathBuilder from './SvgPathBuilder';
 import Draggable from './Draggable'
@@ -45,6 +44,7 @@ import {
 // import MidiIcon from './svg/ic_midi.svg?react';
 // import { midiChannelBindingControlFeatureEnabled } from './MidiChannelBinding';
 // import CloseIcon from '@mui/icons-material/Close';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 
 const START_CONTROL = Pedalboard.START_CONTROL_ID;
 const END_CONTROL = Pedalboard.END_CONTROL_ID;
@@ -53,21 +53,23 @@ const END_CONTROL = Pedalboard.END_CONTROL_ID;
 const START_PEDALBOARD_ITEM_URI = Pedalboard.START_PEDALBOARD_ITEM_URI;
 const END_PEDALBOARD_ITEM_URI = Pedalboard.END_PEDALBOARD_ITEM_URI;
 
-const ENABLED_CONNECTOR_COLOR = isDarkMode() ? "#CCC" : "#666";
-const DISABLED_CONNECTOR_COLOR = isDarkMode() ? "#666" : "#CCC";
+const ENABLED_CONNECTOR_COLOR = isDarkMode() ? "#00E5FF" : "#0284C7";
+const DISABLED_CONNECTOR_COLOR = isDarkMode() ? "#2A3246" : "#CBD5E1";
 
 
 
-const CELL_WIDTH: number = 96;
-const CELL_HEIGHT: number = 64;
-const FRAME_SIZE: number = 36;
+const CELL_WIDTH: number = 142;
+const CELL_HEIGHT: number = 114;
+const FRAME_SIZE: number = 74;
+const CARD_WIDTH: number = 120;
+const CARD_HEIGHT: number = 98;
 
 const STROKE_WIDTH = 3;
-const STEREO_STROKE_WIDTH = 6;
+const STEREO_STROKE_WIDTH = 7;
 
 
 const I_SVG_STROKE_WIDTH = 3;
-const I_SVG_STEREO_STROKE_WIDTH = 6;
+const I_SVG_STEREO_STROKE_WIDTH = 7;
 
 const SVG_STROKE_WIDTH = I_SVG_STROKE_WIDTH.toString();
 const SVG_STEREO_STROKE_WIDTH = I_SVG_STEREO_STROKE_WIDTH.toString();
@@ -91,13 +93,18 @@ function CalculateConnection(numberOfInputs: number, numberOfOutputs: number) {
 }
 
 const pedalboardStyles = (theme: Theme) => createStyles({
-    scrollContainer: {
-    },
+    scrollContainer: css({
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center"
+    }),
 
     container: css({
-        position: "relative",
+        position: "absolute",
         overflow: "visible",
-
+        flex: "0 0 auto"
     }),
     splitItem: css({
         position: "absolute",
@@ -152,14 +159,14 @@ const pedalboardStyles = (theme: Theme) => createStyles({
 
         position: "relative",
 
-        marginLeft: (CELL_WIDTH - FRAME_SIZE) / 2,
-        marginRight: (CELL_WIDTH - FRAME_SIZE) / 2,
-        marginTop: (CELL_HEIGHT - FRAME_SIZE) / 2,
-        marginBottom: (CELL_HEIGHT - FRAME_SIZE) / 2,
-        width: FRAME_SIZE,
-        height: FRAME_SIZE,
+        marginLeft: (CELL_WIDTH - CARD_WIDTH) / 2,
+        marginRight: (CELL_WIDTH - CARD_WIDTH) / 2,
+        marginTop: (CELL_HEIGHT - CARD_HEIGHT) / 2,
+        marginBottom: (CELL_HEIGHT - CARD_HEIGHT) / 2,
+        width: CARD_WIDTH,
+        height: CARD_HEIGHT,
         padding: 0,
-        borderRadius: 8
+        borderRadius: 12
     }),
 
     iconFrame: css({
@@ -168,16 +175,21 @@ const pedalboardStyles = (theme: Theme) => createStyles({
         alignItems: "center",
         justifyContent: "center",
         position: "relative",
-        background: theme.palette.background.paper,
+        background: isDarkMode()
+            ? "linear-gradient(180deg, #1E2433 0%, #131722 100%)"
+            : "linear-gradient(180deg, #FFFFFF 0%, #F1F5F9 100%)",
 
-        width: FRAME_SIZE,
-        height: FRAME_SIZE,
-        borderColor: "#777",
-        borderWidth: 2,
+        width: CARD_WIDTH,
+        height: CARD_HEIGHT,
+        borderColor: isDarkMode() ? "rgba(255, 255, 255, 0.14)" : "rgba(15, 23, 42, 0.18)",
+        borderWidth: 1.5,
         borderStyle: "solid",
         overflow: "hidden",
         padding: 0,
-        borderRadius: 8
+        borderRadius: 12,
+        boxShadow: isDarkMode()
+            ? "0 6px 16px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.08)"
+            : "0 4px 12px rgba(15, 23, 42, 0.10)"
     }),
     selectedIconFrame: css({
 
@@ -185,15 +197,17 @@ const pedalboardStyles = (theme: Theme) => createStyles({
         alignItems: "center",
         justifyContent: "center",
         position: "relative",
-        background: theme.palette.background.paper,
-        width: FRAME_SIZE,
-        height: FRAME_SIZE,
-        borderColor: theme.palette.primary.main,
-        borderWidth: "2.0px",
+        background: isDarkMode()
+            ? "linear-gradient(180deg, #252D40 0%, #171C29 100%)"
+            : "linear-gradient(180deg, #FFFFFF 0%, #E2E8F0 100%)",
+        width: CARD_WIDTH,
+        height: CARD_HEIGHT,
+        borderColor: "#00E5FF",
+        borderWidth: "2px",
         borderStyle: "solid",
         overflow: "hidden",
-        borderRadius: 8,
-        boxShadow: "0 0 6px 0px " + theme.palette.primary.main + "C0"
+        borderRadius: 12,
+        boxShadow: "0 0 16px 1px rgba(0, 229, 255, 0.45), 0 8px 20px rgba(0, 0, 0, 0.65)"
     }),
     borderlessIconFrame: css({
 
@@ -201,12 +215,15 @@ const pedalboardStyles = (theme: Theme) => createStyles({
         alignItems: "center",
         justifyContent: "center",
 
-        background: "transparent",
-        width: FRAME_SIZE,
-        height: FRAME_SIZE,
-        border: "0px #666 solid",
-        borderRadius: 8,
+        background: isDarkMode()
+            ? "radial-gradient(circle, rgba(30, 36, 51, 0.95) 0%, rgba(15, 18, 26, 0.95) 100%)"
+            : "rgba(241, 245, 249, 0.9)",
+        width: 56,
+        height: 56,
+        border: isDarkMode() ? "1.5px rgba(0, 229, 255, 0.35) solid" : "1.5px #94A3B8 solid",
+        borderRadius: 28,
         overflow: "hidden",
+        boxShadow: isDarkMode() ? "0 4px 12px rgba(0, 0, 0, 0.5)" : "none"
     }),
 
     pedalIcon: css({
@@ -236,6 +253,13 @@ const pedalboardStyles = (theme: Theme) => createStyles({
 
 export type OnSelectHandler = (selectedPedal: number) => void;
 
+interface DropPreview {
+    action: "before" | "after" | "start" | "end";
+    targetInstanceId: number;
+    previewX: number;
+    previewY: number;
+}
+
 interface PedalboardProps extends WithStyles<typeof pedalboardStyles> {
     theme: Theme;
     selectedId?: number;
@@ -243,7 +267,14 @@ interface PedalboardProps extends WithStyles<typeof pedalboardStyles> {
     onDoubleClick?: OnSelectHandler;
     hasTinyToolBar: boolean;
     enableStructureEditing: boolean;
-
+    hardwareView?: boolean;
+    chainZoom?: number;
+    panX?: number;
+    panY?: number;
+    centerViewSeq?: number;
+    onPanChange?: (panX: number, panY: number) => void;
+    onWheelZoom?: (deltaZoom: number) => void;
+    onLayoutSizeChanged?: (width: number, height: number) => void;
 }
 interface LayoutSize {
     width: number;
@@ -252,6 +283,12 @@ interface LayoutSize {
 
 type PedalboardState = {
     pedalboard?: Pedalboard;
+    draggingInstanceId: number | null;
+    isOverTrash: boolean;
+    dropPreview: DropPreview | null;
+    isPanning: boolean;
+    panX: number;
+    panY: number;
 };
 
 const EMPTY_PEDALS: PedalLayout[] = [];
@@ -438,7 +475,13 @@ const PedalboardView =
 
                 frameRef: React.RefObject<HTMLDivElement | null>;
                 scrollRef: React.RefObject<HTMLDivElement | null>;
+                trashRef: React.RefObject<HTMLDivElement | null>;
                 private bgColor: string;
+                private panStartClientX: number = 0;
+                private panStartClientY: number = 0;
+                private panStartOffsetX: number = 0;
+                private panStartOffsetY: number = 0;
+                private panPointerId: number = -1;
 
                 constructor(props: PedalboardProps) {
                     super(props);
@@ -449,11 +492,87 @@ const PedalboardView =
                     if (!props.selectedId) props.selectedId = -1;
                     this.state = {
                         pedalboard: this.model.pedalboard.get(),
+                        draggingInstanceId: null,
+                        isOverTrash: false,
+                        dropPreview: null,
+                        isPanning: false,
+                        panX: props.panX ?? 0,
+                        panY: props.panY ?? 0,
                     };
                     this.onPedalboardChanged = this.onPedalboardChanged.bind(this);
                     this.frameRef = React.createRef();
                     this.scrollRef = React.createRef();
+                    this.trashRef = React.createRef();
                     this.handleTouchStart = this.handleTouchStart.bind(this);
+                    this.onStagePointerDown = this.onStagePointerDown.bind(this);
+                    this.onStagePointerMove = this.onStagePointerMove.bind(this);
+                    this.onStagePointerUp = this.onStagePointerUp.bind(this);
+                    this.onStageWheel = this.onStageWheel.bind(this);
+                }
+
+                onStagePointerDown(e: React.PointerEvent<HTMLDivElement>) {
+                    // Only pan when clicking the empty background or connector area (not a pedal button)
+                    let target = e.target as HTMLElement | null;
+                    while (target && target !== e.currentTarget) {
+                        if (target.tagName === "BUTTON" || target.classList.contains("MuiButtonBase-root")) {
+                            return;
+                        }
+                        target = target.parentElement;
+                    }
+                    if (e.pointerType === "mouse" && e.button !== 0 && e.button !== 1) {
+                        return;
+                    }
+                    this.panPointerId = e.pointerId;
+                    this.panStartClientX = e.clientX;
+                    this.panStartClientY = e.clientY;
+                    this.panStartOffsetX = this.state.panX;
+                    this.panStartOffsetY = this.state.panY;
+                    try {
+                        e.currentTarget.setPointerCapture(e.pointerId);
+                    } catch (_err) { }
+                    this.setState({ isPanning: true });
+                }
+
+                onStagePointerMove(e: React.PointerEvent<HTMLDivElement>) {
+                    if (!this.state.isPanning || e.pointerId !== this.panPointerId) return;
+                    let dx = e.clientX - this.panStartClientX;
+                    let dy = e.clientY - this.panStartClientY;
+                    this.setState({
+                        panX: this.panStartOffsetX + dx,
+                        panY: this.panStartOffsetY + dy
+                    });
+                }
+
+                onStagePointerUp(e: React.PointerEvent<HTMLDivElement>) {
+                    if (this.state.isPanning && e.pointerId === this.panPointerId) {
+                        try {
+                            e.currentTarget.releasePointerCapture(e.pointerId);
+                        } catch (_err) { }
+                        this.panPointerId = -1;
+                        let finalX = this.state.panX;
+                        let finalY = this.state.panY;
+                        this.setState({ isPanning: false });
+                        if (this.props.onPanChange) {
+                            this.props.onPanChange(finalX, finalY);
+                        }
+                    }
+                }
+
+                componentDidUpdate(prevProps: PedalboardProps) {
+                    if ((prevProps.panX !== this.props.panX || prevProps.panY !== this.props.panY || prevProps.centerViewSeq !== this.props.centerViewSeq) && !this.state.isPanning) {
+                        this.setState({
+                            panX: this.props.panX ?? 0,
+                            panY: this.props.panY ?? 0
+                        });
+                    }
+                }
+
+                onStageWheel(e: React.WheelEvent<HTMLDivElement>) {
+                    if (this.props.onWheelZoom) {
+                        e.preventDefault();
+                        let delta = e.deltaY < 0 ? 0.05 : -0.05;
+                        this.props.onWheelZoom(delta);
+                    }
                 }
 
                 handleTouchStart(e: any) {
@@ -475,20 +594,61 @@ const PedalboardView =
                     return splitter.isChild(item.instanceId);
                 }
 
-                onDragEnd(instanceId: number, clientX: number, clientY: number) {
-                    if (!this.props.enableStructureEditing) {
-                        return;
-                    }
-                    if (!this.currentLayout) return;
+                isPointInTrashZone(clientX: number, clientY: number): boolean {
+                    let trashEl = this.trashRef.current;
+                    if (!trashEl) return false;
+                    let rc = trashEl.getBoundingClientRect();
+                    let pad = 28;
+                    return (
+                        clientX >= rc.left - pad &&
+                        clientX <= rc.right + pad &&
+                        clientY >= rc.top - pad &&
+                        clientY <= rc.bottom + pad
+                    );
+                }
 
-                    if (!this.frameRef.current) return;
+                private filterNoOpDropPreview(instanceId: number, preview: DropPreview | null, currentLayout: PedalLayout[]): DropPreview | null {
+                    if (!preview) return null;
+                    let draggedLayout: PedalLayout | null = null;
+                    let it = chainIterator(currentLayout);
+                    while (true) {
+                        let v = it.next();
+                        if (v.done) break;
+                        if (v.value.pedalItem?.instanceId === instanceId) {
+                            draggedLayout = v.value;
+                            break;
+                        }
+                    }
+                    if (!draggedLayout) return preview;
+
+                    // If the preview insertion point is on the same row and touches either the left edge
+                    // or the right edge of the dragged item's own cell, moving there is a no-op!
+                    let sameRow = Math.abs(preview.previewY - draggedLayout.bounds.y) < CELL_HEIGHT * 0.4;
+                    if (sameRow) {
+                        let touchesLeftEdge = Math.abs(preview.previewX - draggedLayout.bounds.x) < 4;
+                        let touchesRightEdge = Math.abs(preview.previewX - draggedLayout.bounds.right) < 4;
+                        if (touchesLeftEdge || touchesRightEdge) {
+                            return null;
+                        }
+                    }
+                    return preview;
+                }
+
+                resolveDropTarget(instanceId: number, clientX: number, clientY: number): DropPreview | null {
+                    let rawPreview = this.resolveDropTargetRaw(instanceId, clientX, clientY);
+                    if (!rawPreview || !this.currentLayout) return null;
+                    return this.filterNoOpDropPreview(instanceId, rawPreview, this.currentLayout);
+                }
+
+                resolveDropTargetRaw(instanceId: number, clientX: number, clientY: number): DropPreview | null {
+                    if (!this.currentLayout || !this.frameRef.current) return null;
 
                     let currentLayout: PedalLayout[] = this.currentLayout;
                     let frameElement = this.frameRef.current;
-
                     let rc = frameElement.getBoundingClientRect();
-                    clientX -= rc.left;
-                    clientY -= rc.top;
+                    let zoom = this.props.chainZoom ?? 1.0;
+                    let localX = (clientX - rc.left) / zoom;
+                    let localY = (clientY - rc.top) / zoom;
 
                     let it = chainIterator(currentLayout);
 
@@ -498,128 +658,223 @@ const PedalboardView =
                         let item = v.value;
 
                         if (item.isSplitter() && item.pedalItem) {
-                            if (item.bounds.contains(clientX, clientY)) {
-                                if (clientX < item.bounds.x + CELL_WIDTH / 2) {
-                                    if (this.isSplitterChild(item.pedalItem, instanceId)) 
-                                    {
-                                        return;
+                            if (item.bounds.contains(localX, localY)) {
+                                if (localX < item.bounds.x + CELL_WIDTH / 2) {
+                                    if (this.isSplitterChild(item.pedalItem, instanceId)) {
+                                        return null;
                                     }
-                                    this.model.movePedalboardItemBefore(instanceId, item.pedalItem.instanceId);
-                                    this.setSelection(instanceId);
-                                    return;
-                                } else if (clientX > item.bounds.right - CELL_WIDTH / 2) {
-                                    if (this.isSplitterChild(item.pedalItem, instanceId)) 
-                                    {
-                                        return;
+                                    return {
+                                        action: "before",
+                                        targetInstanceId: item.pedalItem.instanceId,
+                                        previewX: item.bounds.x,
+                                        previewY: item.bounds.y
+                                    };
+                                } else if (localX > item.bounds.right - CELL_WIDTH / 2) {
+                                    if (this.isSplitterChild(item.pedalItem, instanceId)) {
+                                        return null;
                                     }
-                                    this.model.movePedalboardItemAfter(instanceId, item.pedalItem.instanceId);
-                                    this.setSelection(instanceId);
-                                    return;
-
+                                    return {
+                                        action: "after",
+                                        targetInstanceId: item.pedalItem.instanceId,
+                                        previewX: item.bounds.right,
+                                        previewY: item.bounds.y
+                                    };
                                 }
                             }
                             let yMid = (item.bounds.y + item.bounds.bottom) / 2;
-                            if (clientX >= item.bounds.x
-                                && clientY < yMid && clientY >= item.topChildren[0].bounds.y
-
+                            if (localX >= item.bounds.x
+                                && localY < yMid && localY >= item.topChildren[0].bounds.y
                             ) {
-                                if (clientX < item.topChildren[0].bounds.x) {
+                                if (localX < item.topChildren[0].bounds.x) {
                                     let topPedalItem = item.topChildren[0].pedalItem;
                                     if (topPedalItem) {
-                                        if (this.isSplitterChild(topPedalItem, instanceId)) 
-                                        {
-                                            return;
+                                        if (this.isSplitterChild(topPedalItem, instanceId)) {
+                                            return null;
                                         }
-
-                                        this.model.movePedalboardItemBefore(instanceId, topPedalItem.instanceId);
-                                        this.setSelection(instanceId);
-                                        return;
+                                        return {
+                                            action: "before",
+                                            targetInstanceId: topPedalItem.instanceId,
+                                            previewX: item.topChildren[0].bounds.x,
+                                            previewY: item.topChildren[0].bounds.y
+                                        };
                                     }
                                 }
                                 let lastTop = item.topChildren[item.topChildren.length - 1];
-                                if (clientX >= lastTop.bounds.right && clientX < item.bounds.right - CELL_WIDTH / 2) {
+                                if (localX >= lastTop.bounds.right && localX < item.bounds.right - CELL_WIDTH / 2) {
                                     if (lastTop.pedalItem) {
                                         if (this.isSplitterChild(lastTop.pedalItem, instanceId)) {
-                                            return;
+                                            return null;
                                         }
-                                        this.model.movePedalboardItemAfter(instanceId, lastTop.pedalItem.instanceId);
-                                        this.setSelection(instanceId);
-                                        return;
+                                        return {
+                                            action: "after",
+                                            targetInstanceId: lastTop.pedalItem.instanceId,
+                                            previewX: lastTop.bounds.right,
+                                            previewY: lastTop.bounds.y
+                                        };
                                     }
                                 }
-
                             }
-                            if (clientX >= item.bounds.x
-                                && clientY > yMid && clientY < item.bottomChildren[0].bounds.bottom
+                            if (localX >= item.bounds.x
+                                && localY > yMid && localY < item.bottomChildren[0].bounds.bottom
                             ) {
-                                if (clientX < item.bottomChildren[0].bounds.x) {
+                                if (localX < item.bottomChildren[0].bounds.x) {
                                     let bottomPedalItem = item.bottomChildren[0].pedalItem;
                                     if (bottomPedalItem) {
                                         if (this.isSplitterChild(bottomPedalItem, instanceId)) {
-                                            return;
+                                            return null;
                                         }
-                                        this.model.movePedalboardItemBefore(instanceId, bottomPedalItem.instanceId);
-                                        this.setSelection(instanceId);
-                                        return;
+                                        return {
+                                            action: "before",
+                                            targetInstanceId: bottomPedalItem.instanceId,
+                                            previewX: item.bottomChildren[0].bounds.x,
+                                            previewY: item.bottomChildren[0].bounds.y
+                                        };
                                     }
                                 }
                                 let lastBottom = item.bottomChildren[item.bottomChildren.length - 1];
-                                if (clientX >= lastBottom.bounds.right && clientX < item.bounds.right - CELL_WIDTH / 2) {
+                                if (localX >= lastBottom.bounds.right && localX < item.bounds.right - CELL_WIDTH / 2) {
                                     if (lastBottom.pedalItem) {
                                         if (this.isSplitterChild(lastBottom.pedalItem, instanceId)) {
-                                            return;
+                                            return null;
                                         }
-                                        this.model.movePedalboardItemAfter(instanceId, lastBottom.pedalItem.instanceId);
-                                        this.setSelection(instanceId);
-                                        return;
+                                        return {
+                                            action: "after",
+                                            targetInstanceId: lastBottom.pedalItem.instanceId,
+                                            previewX: lastBottom.bounds.right,
+                                            previewY: lastBottom.bounds.y
+                                        };
                                     }
-
                                 }
-
                             }
-
-                        } else if (item.bounds.contains(clientX, clientY)) {
+                        } else if (item.bounds.contains(localX, localY)) {
                             if (item.isStart()) {
-                                this.model.movePedalboardItemToStart(instanceId);
-                                this.setSelection(instanceId);
-                                return;
+                                return {
+                                    action: "start",
+                                    targetInstanceId: START_CONTROL,
+                                    previewX: item.bounds.right,
+                                    previewY: item.bounds.y
+                                };
                             } else if (item.isEnd()) {
-                                this.model.movePedalboardItemToEnd(instanceId);
-                                this.setSelection(instanceId);
-                                return;
+                                return {
+                                    action: "end",
+                                    targetInstanceId: END_CONTROL,
+                                    previewX: item.bounds.x,
+                                    previewY: item.bounds.y
+                                };
                             } else {
                                 if (item.pedalItem) {
-                                    let margin = (CELL_WIDTH - FRAME_SIZE) / 2;
-                                    if (clientX < item.bounds.x + margin) {
-                                        if (this.isSplitterChild(item.pedalItem,instanceId))
-                                        {
-                                            return;
-                                        }
-                                        this.model.movePedalboardItemBefore(instanceId, item.pedalItem.instanceId);
-                                    } else if (clientX > item.bounds.right - margin) {
-                                        if (this.isSplitterChild(item.pedalItem,instanceId))
-                                        {
-                                            return;
-                                        }
-                                        this.model.movePedalboardItemAfter(instanceId, item.pedalItem.instanceId);
-                                    } else {
-                                        if (this.isSplitterChild(item.pedalItem,instanceId))
-                                        {
-                                            return;
-                                        }
-                                        this.model.movePedalboardItem(instanceId, item.pedalItem.instanceId);
+                                    if (item.pedalItem.instanceId === instanceId) {
+                                        return null;
                                     }
-                                    this.setSelection(instanceId);
-                                    return;
+                                    if (this.isSplitterChild(item.pedalItem, instanceId)) {
+                                        return null;
+                                    }
+                                    // Always insert BEFORE (left half) or AFTER (right half) — never overwrite/replace!
+                                    if (localX < item.bounds.x + CELL_WIDTH / 2) {
+                                        return {
+                                            action: "before",
+                                            targetInstanceId: item.pedalItem.instanceId,
+                                            previewX: item.bounds.x,
+                                            previewY: item.bounds.y
+                                        };
+                                    } else {
+                                        return {
+                                            action: "after",
+                                            targetInstanceId: item.pedalItem.instanceId,
+                                            previewX: item.bounds.right,
+                                            previewY: item.bounds.y
+                                        };
+                                    }
                                 }
                             }
-
                         }
                     }
-                    // delete the plugin.
-                    let newId = this.model.setPedalboardItemEmpty(instanceId);
-                    this.setSelection(newId);
+                    return null;
+                }
 
+                onDragStart(instanceId: number, _clientX: number, _clientY: number) {
+                    if (!this.props.enableStructureEditing) return;
+                    this.setState({
+                        draggingInstanceId: instanceId,
+                        isOverTrash: false,
+                        dropPreview: null,
+                    });
+                }
+
+                onDragMove(instanceId: number, clientX: number, clientY: number) {
+                    if (!this.props.enableStructureEditing) return;
+                    let overTrash = this.isPointInTrashZone(clientX, clientY);
+                    let preview = overTrash ? null : this.resolveDropTarget(instanceId, clientX, clientY);
+                    let prev = this.state.dropPreview;
+                    let samePreview =
+                        (prev === null && preview === null) ||
+                        (prev !== null && preview !== null &&
+                            prev.action === preview.action &&
+                            prev.targetInstanceId === preview.targetInstanceId &&
+                            prev.previewX === preview.previewX &&
+                            prev.previewY === preview.previewY);
+
+                    if (overTrash !== this.state.isOverTrash || !samePreview) {
+                        this.setState({
+                            isOverTrash: overTrash,
+                            dropPreview: preview,
+                        });
+                    }
+                }
+
+                onDragCancel() {
+                    if (this.state.draggingInstanceId !== null) {
+                        this.setState({
+                            draggingInstanceId: null,
+                            isOverTrash: false,
+                            dropPreview: null,
+                        });
+                    }
+                }
+
+                onDragEnd(instanceId: number, clientX: number, clientY: number) {
+                    let overTrash = this.isPointInTrashZone(clientX, clientY);
+                    this.setState({
+                        draggingInstanceId: null,
+                        isOverTrash: false,
+                        dropPreview: null,
+                    });
+
+                    if (!this.props.enableStructureEditing) {
+                        return;
+                    }
+
+                    // Only delete the plugin if explicitly dropped onto the Trash zone!
+                    if (overTrash) {
+                        let newId = this.model.setPedalboardItemEmpty(instanceId);
+                        this.setSelection(newId);
+                        return;
+                    }
+
+                    let dropTarget = this.resolveDropTarget(instanceId, clientX, clientY);
+                    if (!dropTarget) {
+                        // Dropped outside the chain and not on the trash icon -> snap back to original place!
+                        return;
+                    }
+
+                    switch (dropTarget.action) {
+                        case "start":
+                            this.model.movePedalboardItemToStart(instanceId);
+                            this.setSelection(instanceId);
+                            break;
+                        case "end":
+                            this.model.movePedalboardItemToEnd(instanceId);
+                            this.setSelection(instanceId);
+                            break;
+                        case "before":
+                            this.model.movePedalboardItemBefore(instanceId, dropTarget.targetInstanceId);
+                            this.setSelection(instanceId);
+                            break;
+                        case "after":
+                            this.model.movePedalboardItemAfter(instanceId, dropTarget.targetInstanceId);
+                            this.setSelection(instanceId);
+                            break;
+                    }
                 }
 
                 onPedalboardChanged(value?: Pedalboard) {
@@ -748,29 +1003,16 @@ const PedalboardView =
                     return bounds;
                 }
                 doLayout(layoutItems: PedalLayout[]): LayoutSize {
-                    const TWO_ROW_HEIGHT = 142 - 14;
-
                     if (layoutItems.length === 0) {
                         // if the current pedalboard is empty, reserve display space anyway.
-                        return { width: 1, height: TWO_ROW_HEIGHT };
+                        return { width: 1, height: CELL_HEIGHT };
                     }
 
                     let lp = new LayoutParams();
 
                     let bounds = this.doLayout2_(lp, layoutItems);
                     // shift everything down so there are no negative y coordinates.
-
-                    if (bounds.height < TWO_ROW_HEIGHT) {
-
-                        let extra = Math.floor((TWO_ROW_HEIGHT - Math.ceil(bounds.height)) / 2);
-                        this.offsetLayout_(layoutItems, Math.floor(-bounds.y + extra / 2));
-                        bounds.height += extra;
-
-                    } else {
-                        this.offsetLayout_(layoutItems, -bounds.y);
-                    }
-
-                    bounds.height += 14; // for labels that aren't accounted for.
+                    this.offsetLayout_(layoutItems, -bounds.y);
                     return { width: bounds.width, height: bounds.height };
 
                 }
@@ -1073,46 +1315,235 @@ const PedalboardView =
                     enabled: boolean,
                     hasBorder: boolean = true,
                     pluginNotFound: boolean,
-                    hasMidiConnector: boolean
+                    hasMidiConnector: boolean,
+                    pedalName: string = "",
+                    pluginUri: string = ""
                 )
                     : ReactNode {
                     const classes = withStyles.getClasses(this.props);
+                    let isSelected = instanceId === this.props.selectedId;
                     let frameStyle = classes.iconFrame;
                     if (!hasBorder) {
                         frameStyle = classes.borderlessIconFrame;
-                    } else {
-                        if (instanceId === this.props.selectedId) {
-                            frameStyle = classes.selectedIconFrame;
-                        }
+                    } else if (isSelected) {
+                        frameStyle = classes.selectedIconFrame;
                     }
 
+                    let catInfo = getPluginCategoryInfo(iconType, iconColor, pluginUri);
+                    let isTerminal = !hasBorder;
+                    let isEmptySlot = iconType === PluginType.None;
+                    let isSplitNode =
+                        iconType === PluginType.SplitA ||
+                        iconType === PluginType.SplitB ||
+                        iconType === PluginType.SplitMix ||
+                        iconType === PluginType.SplitLR;
+
+                    let cardBorderColor = isSelected
+                        ? catInfo.color
+                        : enabled
+                            ? (isDarkMode() ? "rgba(255, 255, 255, 0.16)" : "rgba(15, 23, 42, 0.18)")
+                            : (isDarkMode() ? "rgba(255, 255, 255, 0.06)" : "rgba(15, 23, 42, 0.08)");
+
+                    let cardBoxShadow = isSelected
+                        ? `0 0 18px 1px ${catInfo.glow}, 0 8px 20px rgba(0, 0, 0, 0.65)`
+                        : enabled
+                            ? (isDarkMode() ? "0 6px 16px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.07)" : "0 4px 12px rgba(15, 23, 42, 0.08)")
+                            : "none";
+
                     return (
-                        <div style={{ width: "100%", height: "100%" }}>
-                            <ButtonBase className={classes.pedalButton} 
+                        <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                            <ButtonBase className={classes.pedalButton}
+                                disableRipple={true}
+                                style={isTerminal ? { width: 56, height: 56, borderRadius: 28, margin: "auto", overflow: "visible" } : { overflow: "visible" }}
                                 onClick={(e) => { this.onItemClick(e, instanceId); }}
                                 onDoubleClick={(e: SyntheticEvent) => { this.onItemDoubleClick(e, instanceId); }}
                                 onContextMenu={(e: SyntheticEvent) => { this.onItemLongClick(e, instanceId); }}
                             >
-                                <div className={frameStyle} style={{ position: "absolute" }} onContextMenu={(e) => { e.preventDefault(); }}
-                                >
-                                    <SelectHoverBackground selected={instanceId === this.props.selectedId} showHover={true}
-                                        clipChildren={false}
-                                    >
-                                    </SelectHoverBackground>
-                                </div>
-                                <Draggable draggable={draggable && (this.props.enableStructureEditing)} getScrollContainer={() => this.getScrollContainer()}
-                                    onDragEnd={(x, y) => { this.onDragEnd(instanceId, x, y) }}
-                                    style={{ opacity: enabled ? 0.99 : 0.3 }}
-
-                                >
-                                    <div id="childIcon" style={{ position: "relative", display: "flex", justifyContent: "center", alignItems: "center" }} >
-                                        <PluginIcon pluginType={iconType}
-                                            size={24}
-                                            color={getIconColor(iconColor)}
-                                            pluginMissing={pluginNotFound}
-                                        />
+                                {/* Clean placeholder slot shown in the original spot while this item is being dragged */}
+                                {this.state.draggingInstanceId === instanceId && !isTerminal && (
+                                    <div style={{
+                                        position: "absolute",
+                                        left: 0,
+                                        top: 0,
+                                        width: CARD_WIDTH,
+                                        height: CARD_HEIGHT,
+                                        borderRadius: 12,
+                                        border: isDarkMode()
+                                            ? `1.5px dashed ${catInfo.color}66`
+                                            : `1.5px dashed ${catInfo.color}88`,
+                                        background: isDarkMode()
+                                            ? "rgba(19, 24, 36, 0.55)"
+                                            : "rgba(226, 232, 240, 0.65)",
+                                        backdropFilter: "blur(6px)",
+                                        WebkitBackdropFilter: "blur(6px)",
+                                        boxSizing: "border-box",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        pointerEvents: "none"
+                                    }}>
+                                        <div style={{
+                                            width: 10,
+                                            height: 10,
+                                            borderRadius: "50%",
+                                            border: `1.5px dashed ${catInfo.color}88`
+                                        }} />
                                     </div>
+                                )}
+                                <Draggable draggable={draggable && (this.props.enableStructureEditing)} getScrollContainer={() => this.getScrollContainer()}
+                                    onDragStart={(x, y) => { this.onDragStart(instanceId, x, y); }}
+                                    onDragMove={(x, y) => { this.onDragMove(instanceId, x, y); }}
+                                    onDragCancel={() => { this.onDragCancel(); }}
+                                    onDragEnd={(x, y) => { this.onDragEnd(instanceId, x, y) }}
+                                    style={{ position: "relative", width: "100%", height: "100%", display: "flex", flexDirection: "column", justifyContent: "space-between", alignItems: "center" }}
+                                >
+                                    <div className={frameStyle}
+                                        style={{
+                                            position: "absolute",
+                                            left: 0,
+                                            top: 0,
+                                            borderColor: isTerminal ? (isSelected ? "#00E5FF" : undefined) : cardBorderColor,
+                                            boxShadow: isTerminal ? (isSelected ? "0 0 14px rgba(0, 229, 255, 0.55)" : undefined) : cardBoxShadow,
+                                            borderStyle: isEmptySlot ? "dashed" : "solid",
+                                            background: (!isTerminal && !enabled && !isEmptySlot)
+                                                ? (isDarkMode()
+                                                    ? "linear-gradient(180deg, rgba(24, 30, 44, 0.72) 0%, rgba(15, 19, 29, 0.76) 100%)"
+                                                    : "linear-gradient(180deg, rgba(241, 245, 249, 0.74) 0%, rgba(226, 232, 240, 0.78) 100%)")
+                                                : undefined,
+                                            backdropFilter: (!isTerminal && !enabled && !isEmptySlot) ? "blur(10px) saturate(120%)" : undefined,
+                                            WebkitBackdropFilter: (!isTerminal && !enabled && !isEmptySlot) ? "blur(10px) saturate(120%)" : undefined,
+                                            opacity: 1.0
+                                        }}
+                                        onContextMenu={(e) => { e.preventDefault(); }}
+                                    >
+                                        {/* Top Category Accent Strip for FX / NAM / Split blocks */}
+                                        {!isTerminal && !isEmptySlot && (
+                                            <div style={{
+                                                position: "absolute",
+                                                top: 0,
+                                                left: 0,
+                                                right: 0,
+                                                height: 3.5,
+                                                background: enabled ? catInfo.color : "rgba(148, 163, 184, 0.25)",
+                                                boxShadow: enabled ? `0 0 10px ${catInfo.color}` : "none"
+                                            }} />
+                                        )}
+                                        <SelectHoverBackground selected={isSelected} showHover={true}
+                                            clipChildren={false}
+                                        >
+                                        </SelectHoverBackground>
+                                    </div>
+                                    {isTerminal ? (
+                                        <div id="childIcon" style={{ position: "relative", margin: "auto", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center" }} >
+                                            <PluginIcon pluginType={iconType}
+                                                size={22}
+                                                color={isSelected ? "#00E5FF" : getIconColor(iconColor)}
+                                                pluginMissing={pluginNotFound}
+                                            />
+                                            <span style={{
+                                                fontSize: "9px",
+                                                fontWeight: 700,
+                                                letterSpacing: "0.06em",
+                                                marginTop: 2,
+                                                color: isSelected ? "#00E5FF" : (isDarkMode() ? "#94A3B8" : "#475569")
+                                            }}>
+                                                {instanceId === START_CONTROL ? "IN" : "OUT"}
+                                            </span>
+                                        </div>
+                                    ) : (
+                                        <div style={{
+                                            position: "relative",
+                                            width: "100%",
+                                            height: "100%",
+                                            padding: "10px 9px 7px 9px",
+                                            display: "flex",
+                                            flexDirection: "column",
+                                            justifyContent: "space-between",
+                                            alignItems: "center",
+                                            boxSizing: "border-box",
+                                            opacity: (enabled || isEmptySlot) ? 0.99 : 0.45
+                                        }}>
+                                            {/* Header Row: Category Pill + Bypass LED */}
+                                            <div style={{
+                                                width: "100%",
+                                                display: "flex",
+                                                flexDirection: "row",
+                                                alignItems: "center",
+                                                justifyContent: "space-between",
+                                                paddingLeft: 2,
+                                                paddingRight: 2
+                                            }}>
+                                                <span style={{
+                                                    fontSize: "8.5px",
+                                                    fontWeight: 800,
+                                                    letterSpacing: "0.06em",
+                                                    padding: "1.5px 5.5px",
+                                                    borderRadius: 4,
+                                                    background: isEmptySlot ? "rgba(148,163,184,0.12)" : `${catInfo.color}22`,
+                                                    color: isEmptySlot ? "#94A3B8" : catInfo.color,
+                                                    border: `1px solid ${isEmptySlot ? "rgba(148,163,184,0.2)" : `${catInfo.color}55`}`,
+                                                    lineHeight: 1.2
+                                                }}>
+                                                    {catInfo.badge}
+                                                </span>
 
+                                                {!isEmptySlot && !isSplitNode && (
+                                                    <div
+                                                        title={enabled ? "Active (Click to select)" : "Bypassed"}
+                                                        onClick={(ev) => {
+                                                            ev.stopPropagation();
+                                                            this.model.setPedalboardItemEnabled(instanceId, !enabled);
+                                                            this.setSelection(instanceId);
+                                                        }}
+                                                        style={{
+                                                            width: 9,
+                                                            height: 9,
+                                                            borderRadius: "50%",
+                                                            background: enabled ? catInfo.color : "rgba(100, 116, 139, 0.35)",
+                                                            boxShadow: enabled ? `0 0 8px 1px ${catInfo.color}` : "inset 0 1px 2px rgba(0,0,0,0.6)",
+                                                            border: "1px solid rgba(255,255,255,0.25)",
+                                                            cursor: "pointer"
+                                                        }}
+                                                    />
+                                                )}
+                                            </div>
+
+                                            {/* Center Hardware Illustration or Icon */}
+                                            <div id="childIcon" style={{ position: "relative", display: "flex", justifyContent: "center", alignItems: "center", marginTop: "auto", marginBottom: "auto" }} >
+                                                {(this.props.hardwareView && !isEmptySlot && !isSplitNode && !pluginNotFound) ? (
+                                                    renderHardwareIllustration(
+                                                        catInfo.badge,
+                                                        getIconColor(iconColor) || catInfo.color,
+                                                        enabled
+                                                    )
+                                                ) : (
+                                                    <PluginIcon pluginType={iconType}
+                                                        size={30}
+                                                        color={getIconColor(iconColor) || (enabled || isSplitNode ? catInfo.color : undefined)}
+                                                        pluginMissing={pluginNotFound}
+                                                    />
+                                                )}
+                                            </div>
+
+                                            {/* Bottom Pedal / Model Title Inside Block */}
+                                            <div style={{
+                                                width: "100%",
+                                                overflow: "hidden",
+                                                textOverflow: "ellipsis",
+                                                whiteSpace: "nowrap",
+                                                textAlign: "center",
+                                                fontSize: "10.5px",
+                                                fontWeight: isSelected ? 700 : 600,
+                                                letterSpacing: "0.01em",
+                                                color: isEmptySlot
+                                                    ? "#64748B"
+                                                    : (isDarkMode() ? (enabled ? "#F1F5F9" : "#94A3B8") : (enabled ? "#0F172A" : "#64748B")),
+                                                lineHeight: 1.15
+                                            }}>
+                                                {isEmptySlot ? "+ Add Effect" : (isSplitNode ? catInfo.badge : pedalName)}
+                                            </div>
+                                        </div>
+                                    )}
                                 </Draggable>
                             </ButtonBase>
 
@@ -1158,6 +1589,139 @@ const PedalboardView =
 
                 }
 
+                renderDropPreview(layoutChain: PedalLayout[]): ReactNode {
+                    let preview = this.state.dropPreview;
+                    let draggingId = this.state.draggingInstanceId;
+                    if (!preview || draggingId === null) return null;
+
+                    let draggedLayout: PedalLayout | null = null;
+                    let it = chainIterator(layoutChain);
+                    while (true) {
+                        let v = it.next();
+                        if (v.done) break;
+                        if (v.value.pedalItem?.instanceId === draggingId) {
+                            draggedLayout = v.value;
+                            break;
+                        }
+                    }
+                    if (!draggedLayout) return null;
+
+                    let pluginType = draggedLayout.pluginType;
+                    if (draggedLayout.uri === "http://two-play.com/plugins/toob-nam") {
+                        pluginType = PluginType.NamPlugin;
+                    }
+                    if (draggedLayout.isSplitter()) {
+                        pluginType = this.getSplitterIcon(draggedLayout);
+                    }
+                    let isSplitNode = draggedLayout.isSplitter();
+                    let iconColor = draggedLayout.pedalItem?.iconColor ?? "";
+                    let catInfo = getPluginCategoryInfo(pluginType, iconColor, draggedLayout.uri);
+
+                    let left = preview.previewX - CARD_WIDTH / 2;
+                    let top = preview.previewY + (CELL_HEIGHT - CARD_HEIGHT) / 2;
+
+                    return (
+                        <div
+                            key="drop-preview-ghost"
+                            style={{
+                                position: "absolute",
+                                left: left,
+                                top: top,
+                                width: CARD_WIDTH,
+                                height: CARD_HEIGHT,
+                                borderRadius: 12,
+                                border: `2px dashed ${catInfo.color}`,
+                                background: isDarkMode()
+                                    ? `linear-gradient(180deg, ${catInfo.color}28 0%, rgba(19, 23, 34, 0.88) 100%)`
+                                    : `linear-gradient(180deg, ${catInfo.color}22 0%, rgba(255, 255, 255, 0.9) 100%)`,
+                                boxShadow: `0 0 20px 2px ${catInfo.glow}`,
+                                transform: "scale(0.84)",
+                                transition: "left 0.18s cubic-bezier(0.22, 1, 0.36, 1), top 0.18s cubic-bezier(0.22, 1, 0.36, 1), transform 0.18s ease",
+                                zIndex: 2,
+                                pointerEvents: "none",
+                                display: "flex",
+                                flexDirection: "column",
+                                justifyContent: "space-between",
+                                alignItems: "center",
+                                padding: "10px 9px 7px 9px",
+                                boxSizing: "border-box",
+                                opacity: 0.92
+                            }}
+                        >
+                            <div style={{
+                                width: "100%",
+                                display: "flex",
+                                justifyContent: "space-between",
+                                alignItems: "center"
+                            }}>
+                                <span style={{
+                                    fontSize: "8px",
+                                    fontWeight: 800,
+                                    letterSpacing: "0.06em",
+                                    padding: "1px 5px",
+                                    borderRadius: 4,
+                                    background: `${catInfo.color}33`,
+                                    color: catInfo.color,
+                                    border: `1px solid ${catInfo.color}66`
+                                }}>
+                                    {catInfo.badge}
+                                </span>
+                                <span style={{
+                                    fontSize: "8px",
+                                    fontWeight: 800,
+                                    letterSpacing: "0.05em",
+                                    color: "#00E5FF"
+                                }}>
+                                    INSERT
+                                </span>
+                            </div>
+                            <div style={{ display: "flex", justifyContent: "center", alignItems: "center", marginTop: "auto", marginBottom: "auto", opacity: 0.9 }}>
+                                {(this.props.hardwareView && !isSplitNode) ? (
+                                    renderHardwareIllustration(
+                                        catInfo.badge,
+                                        getIconColor(iconColor) || catInfo.color,
+                                        true
+                                    )
+                                ) : (
+                                    <PluginIcon
+                                        pluginType={pluginType}
+                                        size={28}
+                                        color={getIconColor(iconColor) || catInfo.color}
+                                        pluginMissing={false}
+                                    />
+                                )}
+                            </div>
+                            <div style={{
+                                width: "100%",
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                whiteSpace: "nowrap",
+                                textAlign: "center",
+                                fontSize: "10px",
+                                fontWeight: 700,
+                                color: isDarkMode() ? "#F8FAFC" : "#0F172A"
+                            }}>
+                                {isSplitNode ? catInfo.badge : draggedLayout.name}
+                            </div>
+                        </div>
+                    );
+                }
+
+                getItemShiftTransform(item: PedalLayout): string | undefined {
+                    let preview = this.state.dropPreview;
+                    if (!preview) return undefined;
+                    if (Math.abs(item.bounds.y - preview.previewY) > CELL_HEIGHT * 0.6) {
+                        return undefined;
+                    }
+                    let itemCenterX = item.bounds.x + CELL_WIDTH / 2;
+                    let shiftPx = 34;
+                    if (itemCenterX < preview.previewX) {
+                        return `translateX(-${shiftPx}px)`;
+                    } else {
+                        return `translateX(${shiftPx}px)`;
+                    }
+                }
+
                 renderChain(layoutChain: PedalLayout[], layoutSize: LayoutSize): ReactNode {
 
                     const classes = withStyles.getClasses(this.props);
@@ -1165,15 +1729,23 @@ const PedalboardView =
                     let result: ReactNode[] = [];
 
                     result.push(this.renderConnectorFrame(layoutChain, layoutSize));
+                    let ghostPreview = this.renderDropPreview(layoutChain);
+                    if (ghostPreview) {
+                        result.push(ghostPreview);
+                    }
 
                     let it = chainIterator(layoutChain);
                     while (true) {
                         let v = it.next();
                         if (v.done) break;
                         let item = v.value;
+                        let shiftTransform = this.getItemShiftTransform(item);
+                        let isBeingDragged = item.pedalItem !== undefined && item.pedalItem.instanceId === this.state.draggingInstanceId;
+                        let itemZIndex = isBeingDragged ? 20 : 1;
+                        let itemTransition = "transform 0.22s cubic-bezier(0.22, 1, 0.36, 1)";
                         switch (item.uri) {
                             case START_PEDALBOARD_ITEM_URI:
-                                result.push(<div key={this.renderKey++} className={classes.splitItem} style={{ left: item.bounds.x, top: item.bounds.y, width: item.bounds.width }} >
+                                result.push(<div key={"start-node"} className={classes.splitItem} style={{ left: item.bounds.x, top: item.bounds.y, width: item.bounds.width, zIndex: itemZIndex, transform: shiftTransform, transition: itemTransition }} >
                                     <div className={classes.splitStart} >
 
                                         {this.pedalButton(START_CONTROL, item.pluginType, item.iconColor, false, true, false, false, false)}
@@ -1181,7 +1753,7 @@ const PedalboardView =
                                 </div>);
                                 break;
                             case END_PEDALBOARD_ITEM_URI:
-                                result.push(<div key={this.renderKey++} className={classes.splitItem} style={{ left: item.bounds.x, top: item.bounds.y, width: item.bounds.width }} >
+                                result.push(<div key={"end-node"} className={classes.splitItem} style={{ left: item.bounds.x, top: item.bounds.y, width: item.bounds.width, zIndex: itemZIndex, transform: shiftTransform, transition: itemTransition }} >
                                     <div className={classes.splitStart} >
 
                                         {this.pedalButton(END_CONTROL, item.pluginType, "", false, true, false, false, false)}
@@ -1191,26 +1763,13 @@ const PedalboardView =
                             default:
                                 if (item.isSplitter()) {
 
-                                    result.push(<div key={this.renderKey++} className={classes.splitItem} style={{ left: item.bounds.x, top: item.bounds.y, width: item.bounds.width }} >
+                                    result.push(<div key={"split-" + (item.pedalItem?.instanceId ?? this.renderKey++)} className={classes.splitItem} style={{ left: item.bounds.x, top: item.bounds.y, width: item.bounds.width, zIndex: itemZIndex, transform: shiftTransform, transition: itemTransition }} >
                                         <div className={classes.splitStart} >
                                             {this.pedalButton(item.pedalItem?.instanceId ?? -1, this.getSplitterIcon(item), "", true, true, true, false, false)}
                                         </div>
                                     </div>);
 
                                 } else {
-                                    result.push(
-                                        <div key={this.renderKey++} style={{
-                                            display: "flex", justifyContent: "flex-start", alignItems: "flex-start",
-                                            position: "absolute", left: item.bounds.x, width: CELL_WIDTH, top: item.bounds.bottom - 12, paddingLeft: 2, paddingRight: 2
-                                        }}>
-                                            <Typography variant="caption" display="block" noWrap={true}
-                                                style={{
-                                                    width: CELL_WIDTH - 4, textAlign: "center", flex: "0 1 auto",
-                                                    opacity: item.pedalItem?.isEnabled ?? true ? 1.0 : 0.4
-                                                }}
-                                            >{item.name}</Typography>
-                                        </div>
-                                    )
                                     let uiPlugin = this.model.getUiPlugin(item.pedalItem?.uri ?? "");
                                     let pluginMissing = uiPlugin === null;
                                     let pluginType = item.pluginType;
@@ -1219,7 +1778,7 @@ const PedalboardView =
 
                                     }
 
-                                    result.push(<div key={this.renderKey++} className={classes.pedalItem} style={{ left: item.bounds.x, top: item.bounds.y }} >
+                                    result.push(<div key={"pedal-" + (item.pedalItem?.instanceId ?? this.renderKey++)} className={classes.pedalItem} style={{ left: item.bounds.x, top: item.bounds.y, zIndex: itemZIndex, transform: shiftTransform, transition: itemTransition }} >
                                         {this.pedalButton(
                                             item.pedalItem?.instanceId ?? -1,
                                             pluginType,
@@ -1228,7 +1787,9 @@ const PedalboardView =
                                             item.pedalItem?.isEnabled ?? false,
                                             true,
                                             pluginMissing,
-                                            uiPlugin ? ((uiPlugin.has_midi_input !== 0) || (uiPlugin.has_midi_output !== 0)) : false)}
+                                            uiPlugin ? ((uiPlugin.has_midi_input !== 0) || (uiPlugin.has_midi_output !== 0)) : false,
+                                            item.name,
+                                            item.pedalItem?.uri ?? "")}
 
                                     </div>);
 
@@ -1369,6 +1930,8 @@ const PedalboardView =
                 }
 
                 currentLayout?: PedalLayout[];
+                private lastReportedWidth: number = 0;
+                private lastReportedHeight: number = 0;
                 private renderKey: number = 0;
                 render() {
                     const classes = withStyles.getClasses(this.props);
@@ -1383,18 +1946,92 @@ const PedalboardView =
                     }
 
                     let layoutSize = this.doLayout(layoutChain);
+                    if (this.props.onLayoutSizeChanged && (layoutSize.width !== this.lastReportedWidth || layoutSize.height !== this.lastReportedHeight)) {
+                        this.lastReportedWidth = layoutSize.width;
+                        this.lastReportedHeight = layoutSize.height;
+                        let cb = this.props.onLayoutSizeChanged;
+                        let w = layoutSize.width;
+                        let h = layoutSize.height;
+                        setTimeout(() => cb(w, h), 0);
+                    }
+                    let zoom = this.props.chainZoom ?? 1.0;
+                    let panX = this.state.panX;
+                    let panY = this.state.panY;
+                    let isDragging = this.state.draggingInstanceId !== null;
+                    let overTrash = this.state.isOverTrash;
 
 
                     this.currentLayout = layoutChain; // save for mouse processing &c.
 
                     return (
                         <div className={classes.scrollContainer} ref={this.scrollRef}
+                            onPointerDown={this.onStagePointerDown}
+                            onPointerMove={this.onStagePointerMove}
+                            onPointerUp={this.onStagePointerUp}
+                            onPointerCancel={this.onStagePointerUp}
+                            onWheel={this.onStageWheel}
+                            style={{
+                                position: "relative",
+                                cursor: this.state.isPanning ? "grabbing" : "grab",
+                                userSelect: "none",
+                                touchAction: "none"
+                            }}
                         >
-                            <div className={classes.container} ref={this.frameRef}
+                            <div id="pedalboardChainSizeBox"
+                                className={classes.container}
+                                ref={this.frameRef}
+                                data-raw-width={layoutSize.width}
+                                data-raw-height={layoutSize.height}
                                 style={{
-                                    width: layoutSize.width, height: layoutSize.height,
+                                    left: "50%",
+                                    top: "50%",
+                                    width: layoutSize.width,
+                                    height: layoutSize.height,
+                                    transform: `translate(calc(-50% + ${panX}px), calc(-50% + ${panY}px)) scale(${zoom})`,
+                                    transformOrigin: "center center"
                                 }} >
                                 {this.renderChain(layoutChain, layoutSize)}
+                            </div>
+                            {/* Trash Drop Target Zone when dragging an effect block */}
+                            <div
+                                ref={this.trashRef}
+                                style={{
+                                    position: "fixed",
+                                    left: "50%",
+                                    top: 76,
+                                    transform: isDragging
+                                        ? `translateX(-50%) scale(${overTrash ? 1.12 : 1.0})`
+                                        : "translateX(-50%) translateY(-16px) scale(0.85)",
+                                    opacity: isDragging ? 1 : 0,
+                                    pointerEvents: "none",
+                                    zIndex: 30,
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 7,
+                                    padding: "7px 16px",
+                                    borderRadius: 999,
+                                    background: overTrash
+                                        ? "linear-gradient(135deg, #EF4444 0%, #DC2626 100%)"
+                                        : (isDarkMode() ? "rgba(23, 28, 42, 0.94)" : "rgba(255, 255, 255, 0.95)"),
+                                    border: overTrash
+                                        ? "1.5px solid #FCA5A5"
+                                        : "1.5px dashed rgba(239, 68, 68, 0.65)",
+                                    boxShadow: overTrash
+                                        ? "0 0 24px rgba(239, 68, 68, 0.75), 0 8px 20px rgba(0, 0, 0, 0.6)"
+                                        : "0 6px 18px rgba(0, 0, 0, 0.55)",
+                                    color: overTrash ? "#FFFFFF" : "#F87171",
+                                    transition: "all 0.16s cubic-bezier(0.22, 1, 0.36, 1)"
+                                }}
+                            >
+                                <DeleteOutlineIcon style={{ width: 18, height: 18 }} />
+                                <span style={{
+                                    fontSize: "11px",
+                                    fontWeight: 800,
+                                    letterSpacing: "0.06em",
+                                    textTransform: "uppercase"
+                                }}>
+                                    {overTrash ? "Release to Delete" : "Drag Here to Remove"}
+                                </span>
                             </div>
                         </div>
                     );

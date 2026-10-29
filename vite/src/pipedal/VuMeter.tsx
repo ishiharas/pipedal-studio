@@ -103,10 +103,11 @@ const styles = (theme: Theme) => ({
     frame: css({
         position: "relative",
         width: CHANNEL_WIDTH + 2*BORDER_THICKNESS,
-        borderTop: BORDER_THICKNESS + "px black solid",
-        borderBottom: BORDER_THICKNESS + "px black solid",
+        borderTop: BORDER_THICKNESS + "px #0B0E17 solid",
+        borderBottom: BORDER_THICKNESS + "px #0B0E17 solid",
         height: DISPLAY_HEIGHT,
-        background: "black",
+        background: "#0B0E17",
+        borderRadius: 999,
         overflow: "hidden",
         marginLeft: (CHANNEL_WIDTH+BORDER_THICKNESS)/2,
         marginRight: (CHANNEL_WIDTH+BORDER_THICKNESS)/2
@@ -114,10 +115,11 @@ const styles = (theme: Theme) => ({
     frameStereo: css({
         position: "relative",
         width: 2*CHANNEL_WIDTH + 3*BORDER_THICKNESS,
-        borderTop: BORDER_THICKNESS + "px black solid",
-        borderBottom: BORDER_THICKNESS + "px black solid",
+        borderTop: BORDER_THICKNESS + "px #0B0E17 solid",
+        borderBottom: BORDER_THICKNESS + "px #0B0E17 solid",
         height: DISPLAY_HEIGHT,
-        background: "black",
+        background: "#0B0E17",
+        borderRadius: 999,
         overflow: "hidden",
     }),
     monoTextFrame: css({

@@ -165,6 +165,233 @@ export const getIconColor = (key?: string): string| undefined => {
     return undefined;
 }
 
+export interface PluginCategoryInfo {
+    badge: string;
+    color: string;
+    glow: string;
+}
+
+export function getPluginCategoryInfo(pluginType: PluginType, customIconColor?: string, pluginUri?: string): PluginCategoryInfo {
+    let customColor = getIconColor(customIconColor);
+    if (pluginUri === "http://two-play.com/plugins/toob-nam" || pluginType === PluginType.NamPlugin) {
+        let c = customColor || "#FF3864";
+        return { badge: "NAM", color: c, glow: "rgba(255, 56, 100, 0.35)" };
+    }
+    switch (pluginType) {
+        case PluginType.AmplifierPlugin: {
+            let c = customColor || "#FF5E36";
+            return { badge: "AMP", color: c, glow: "rgba(255, 94, 54, 0.35)" };
+        }
+        case PluginType.DistortionPlugin:
+        case PluginType.WaveshaperPlugin:
+        case PluginType.FunctionPlugin: {
+            let c = customColor || "#FF9F1C";
+            return { badge: "DRV", color: c, glow: "rgba(255, 159, 28, 0.35)" };
+        }
+        case PluginType.SimulatorPlugin: {
+            let c = customColor || "#00D2B8";
+            return { badge: "CAB / IR", color: c, glow: "rgba(0, 210, 184, 0.35)" };
+        }
+        case PluginType.CompressorPlugin:
+        case PluginType.DynamicsPlugin:
+        case PluginType.ExpanderPlugin:
+        case PluginType.LimiterPlugin:
+        case PluginType.GatePlugin: {
+            let c = customColor || "#FFD166";
+            return { badge: "DYN", color: c, glow: "rgba(255, 209, 102, 0.35)" };
+        }
+        case PluginType.EQPlugin:
+        case PluginType.ParaEQPlugin:
+        case PluginType.MultiEQPlugin:
+        case PluginType.FilterPlugin:
+        case PluginType.BandpassPlugin:
+        case PluginType.AllpassPlugin:
+        case PluginType.LowpassPlugin:
+        case PluginType.HighpassPlugin: {
+            let c = customColor || "#38BDF8";
+            return { badge: "EQ", color: c, glow: "rgba(56, 189, 248, 0.35)" };
+        }
+        case PluginType.ChorusPlugin:
+        case PluginType.ModulatorPlugin:
+        case PluginType.CombPlugin:
+        case PluginType.PhaserPlugin:
+        case PluginType.FlangerPlugin: {
+            let c = customColor || "#A855F7";
+            return { badge: "MOD", color: c, glow: "rgba(168, 85, 247, 0.35)" };
+        }
+        case PluginType.DelayPlugin: {
+            let c = customColor || "#10B981";
+            return { badge: "DLY", color: c, glow: "rgba(16, 185, 129, 0.35)" };
+        }
+        case PluginType.ReverbPlugin:
+        case PluginType.SpatialPlugin: {
+            let c = customColor || "#EC4899";
+            return { badge: "REV", color: c, glow: "rgba(236, 72, 153, 0.35)" };
+        }
+        case PluginType.PitchPlugin:
+        case PluginType.SpectralPlugin: {
+            let c = customColor || "#6366F1";
+            return { badge: "PITCH", color: c, glow: "rgba(99, 102, 241, 0.35)" };
+        }
+        case PluginType.SplitA:
+            return { badge: "SPLIT A", color: "#38BDF8", glow: "rgba(56, 189, 248, 0.35)" };
+        case PluginType.SplitB:
+            return { badge: "SPLIT B", color: "#A855F7", glow: "rgba(168, 85, 247, 0.35)" };
+        case PluginType.SplitMix:
+            return { badge: "MIX", color: "#10B981", glow: "rgba(16, 185, 129, 0.35)" };
+        case PluginType.SplitLR:
+            return { badge: "L / R", color: "#F59E0B", glow: "rgba(245, 158, 11, 0.35)" };
+        case PluginType.Terminal:
+            return { badge: "I/O", color: "#00E5FF", glow: "rgba(0, 229, 255, 0.35)" };
+        case PluginType.None:
+            return { badge: "EMPTY", color: "#64748B", glow: "rgba(100, 116, 139, 0.25)" };
+        default: {
+            let c = customColor || "#8B5CF6";
+            return { badge: "FX", color: c, glow: "rgba(139, 92, 246, 0.35)" };
+        }
+    }
+}
+
+export function renderHardwareIllustration(
+    badge: string,
+    color: string,
+    enabled: boolean
+): React.ReactElement {
+    const activeColor = enabled ? color : "#64748B";
+    const bodyFill = enabled ? `${color}24` : "rgba(30, 41, 59, 0.45)";
+    const strokeCol = enabled ? color : "#475569";
+
+    if (badge === "NAM") {
+        // Neural Amp Modeler / Profiler Head Illustration
+        return (
+            <svg width={70} height={44} viewBox="0 0 58 36" style={{ overflow: "visible" }}>
+                {/* Top Handle */}
+                <path d="M 21 3 L 37 3" stroke={strokeCol} strokeWidth={2} strokeLinecap="round" opacity={0.7} />
+                {/* Amp Profiler Chassis */}
+                <rect x={3} y={4} width={52} height={29} rx={4.5} fill="#0F1420" stroke={strokeCol} strokeWidth={1.6} />
+                <rect x={5.5} y={6.5} width={47} height={14} rx={2.5} fill={bodyFill} stroke={strokeCol} strokeWidth={0.9} opacity={0.9} />
+                {/* Glowing Neural Capture Wave inside Screen */}
+                <path
+                    d="M 10 13.5 Q 15 7, 20 13.5 T 30 13.5 T 40 13.5 T 48 13.5"
+                    fill="none"
+                    stroke={activeColor}
+                    strokeWidth={1.6}
+                    strokeLinecap="round"
+                />
+                {/* 4 Front Panel Knobs + Capture LED */}
+                {[12, 21, 30, 39].map((cx, i) => (
+                    <g key={i}>
+                        <circle cx={cx} cy={26.5} r={3} fill="#1E293B" stroke={strokeCol} strokeWidth={1.1} />
+                        <line x1={cx} y1={26.5} x2={cx + 1.2} y2={24.3} stroke={activeColor} strokeWidth={1.1} strokeLinecap="round" />
+                    </g>
+                ))}
+                <circle cx={47.5} cy={26.5} r={2.2} fill={enabled ? activeColor : "#334155"} />
+            </svg>
+        );
+    }
+
+    if (badge === "AMP") {
+        // Classic Tube Amplifier Head Illustration
+        return (
+            <svg width={70} height={44} viewBox="0 0 58 36" style={{ overflow: "visible" }}>
+                {/* Top Carry Handle */}
+                <path d="M 20 2.5 L 38 2.5" stroke={strokeCol} strokeWidth={2} strokeLinecap="round" opacity={0.75} />
+                {/* Outer Tolex Shell */}
+                <rect x={2} y={4} width={54} height={29} rx={4} fill="#111622" stroke={strokeCol} strokeWidth={1.6} />
+                {/* Woven Grill Cloth Area */}
+                <rect x={5} y={6.5} width={48} height={14} rx={2} fill={bodyFill} stroke={strokeCol} strokeWidth={0.9} />
+                <line x1={5} y1={11} x2={53} y2={11} stroke={strokeCol} strokeWidth={0.6} strokeDasharray="2 2" opacity={0.5} />
+                <line x1={5} y1={15.5} x2={53} y2={15.5} stroke={strokeCol} strokeWidth={0.6} strokeDasharray="2 2" opacity={0.5} />
+                {/* Amp Logo Plate */}
+                <rect x={22} y={10.5} width={14} height={4.5} rx={1.5} fill="#0F1420" stroke={activeColor} strokeWidth={1} />
+                {/* Lower Control Faceplate & 5 Knobs */}
+                <rect x={5} y={22.5} width={48} height={7.5} rx={1.5} fill="#1A2234" />
+                {[10, 18, 26, 34, 42].map((cx, i) => (
+                    <circle key={i} cx={cx} cy={26.2} r={2.3} fill="#0F1420" stroke={activeColor} strokeWidth={1.1} />
+                ))}
+                {/* Pilot Light */}
+                <circle cx={49} cy={26.2} r={2} fill={enabled ? "#FF3864" : "#334155"} />
+            </svg>
+        );
+    }
+
+    if (badge === "CAB / IR") {
+        // 4x12 Speaker Cabinet Illustration
+        return (
+            <svg width={56} height={44} viewBox="0 0 46 36" style={{ overflow: "visible" }}>
+                <rect x={5} y={2} width={36} height={32} rx={4} fill="#101520" stroke={strokeCol} strokeWidth={1.6} />
+                <rect x={8} y={5} width={30} height={26} rx={2.5} fill={bodyFill} stroke={strokeCol} strokeWidth={0.8} />
+                {/* 4x12 Speaker Cones */}
+                {[
+                    [16.5, 11.5],
+                    [29.5, 11.5],
+                    [16.5, 24.5],
+                    [29.5, 24.5],
+                ].map(([cx, cy], i) => (
+                    <g key={i}>
+                        <circle cx={cx} cy={cy} r={5.2} fill="#0B0E17" stroke={strokeCol} strokeWidth={1.1} />
+                        <circle cx={cx} cy={cy} r={1.8} fill={activeColor} opacity={0.85} />
+                    </g>
+                ))}
+            </svg>
+        );
+    }
+
+    if (badge === "EQ") {
+        // Graphic / Parametric EQ Pedal with Sliders
+        return (
+            <svg width={58} height={44} viewBox="0 0 48 36" style={{ overflow: "visible" }}>
+                {/* Side Jacks */}
+                <rect x={3} y={13} width={2.5} height={6} rx={1} fill="#64748B" />
+                <rect x={42.5} y={13} width={2.5} height={6} rx={1} fill="#64748B" />
+                {/* Pedal Enclosure */}
+                <rect x={5.5} y={2} width={37} height={32} rx={4.5} fill="#111622" stroke={strokeCol} strokeWidth={1.6} />
+                <rect x={8.5} y={5} width={31} height={17} rx={2} fill={bodyFill} />
+                {/* 5 EQ Fader Sliders */}
+                {[
+                    [13, 14],
+                    [18.5, 9.5],
+                    [24, 12],
+                    [29.5, 8.5],
+                    [35, 13.5],
+                ].map(([x, capY], i) => (
+                    <g key={i}>
+                        <line x1={x} y1={7} x2={x} y2={19.5} stroke="#475569" strokeWidth={1.3} strokeLinecap="round" />
+                        <rect x={x - 2} y={capY} width={4} height={2.6} rx={1} fill={activeColor} />
+                    </g>
+                ))}
+                {/* Bottom Footswitch Pad */}
+                <rect x={9} y={24.5} width={30} height={6.5} rx={2} fill="#1E293B" stroke={strokeCol} strokeWidth={1} />
+            </svg>
+        );
+    }
+
+    // Default Stompbox Pedal Illustration (DRV, MOD, DLY, REV, DYN, PITCH, FX)
+    return (
+        <svg width={54} height={44} viewBox="0 0 44 36" style={{ overflow: "visible" }}>
+            {/* Side Input/Output Jacks */}
+            <rect x={3.5} y={13} width={2.5} height={6} rx={1} fill="#64748B" />
+            <rect x={38} y={13} width={2.5} height={6} rx={1} fill="#64748B" />
+            {/* Stompbox Metal Body */}
+            <rect x={6} y={2} width={32} height={32} rx={4.5} fill="#121724" stroke={strokeCol} strokeWidth={1.6} />
+            {/* Upper Knob Faceplate */}
+            <rect x={8.5} y={4.5} width={27} height={14.5} rx={2.5} fill={bodyFill} />
+            {/* 3 Stompbox Knobs */}
+            {[13.5, 22, 30.5].map((cx, i) => (
+                <g key={i}>
+                    <circle cx={cx} cy={10.5} r={3.1} fill="#0F1420" stroke={strokeCol} strokeWidth={1.1} />
+                    <line x1={cx} y1={10.5} x2={cx + (i - 1) * 1.3} y2={8.2} stroke={activeColor} strokeWidth={1.1} strokeLinecap="round" />
+                </g>
+            ))}
+            {/* Stompbox Center Status LED */}
+            <circle cx={22} cy={16.5} r={1.5} fill={enabled ? activeColor : "#334155"} />
+            {/* Bottom Footswitch Pad / Stomp Actuator */}
+            <rect x={9} y={21.5} width={26} height={9.5} rx={2.5} fill="#1E293B" stroke={strokeCol} strokeWidth={1} />
+            <circle cx={22} cy={26.2} r={2.6} fill="#94A3B8" stroke="#0F172A" strokeWidth={1} />
+        </svg>
+    );
+}
+
 
 
 

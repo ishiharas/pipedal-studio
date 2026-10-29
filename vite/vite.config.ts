@@ -17,11 +17,11 @@ export default defineConfig({
   server: {
     proxy: {
       '/resources': {
-        target: 'http://localhost:8080',
+        target: 'http://192.168.178.56:80',
         changeOrigin: false,
       },
       '^/var/.*': {
-        target: 'http://localhost:8080',
+        target: 'http://192.168.178.56:80',
         changeOrigin: false,
       },
     }
